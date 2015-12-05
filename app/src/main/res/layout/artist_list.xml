@@ -2,12 +2,12 @@
 <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/item_list"
-    android:name="com.ludgo.android.spotifyplayer.ItemListFragment"
+    android:id="@+id/artist_list"
+    android:name="com.ludgo.android.spotifyplayer.ArtistListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
     app:layoutManager="LinearLayoutManager"
-    tools:context="com.ludgo.android.spotifyplayer.ItemListActivity"
-    tools:listitem="@layout/item_list_content" />
+    tools:context=".ArtistListActivity"
+    tools:listitem="@layout/artist_list_content" />
