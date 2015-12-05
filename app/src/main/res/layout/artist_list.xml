@@ -1,13 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/artist_list"
-    android:name="com.ludgo.android.spotifyplayer.ArtistListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
-    app:layoutManager="LinearLayoutManager"
-    tools:context=".ArtistListActivity"
-    tools:listitem="@layout/artist_list_content" />
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/searchArtist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="type artist"
+        android:imeOptions="actionSearch"
+        android:inputType="text|textCapWords" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:onClick="searchArtist"
+        android:text="Search"/>
+
+    <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/artist_list"
+        android:name="com.ludgo.android.spotifyplayer.ArtistListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        app:layoutManager="LinearLayoutManager"
+        tools:context=".ArtistListActivity"
+        tools:listitem="@layout/artist_list_content" />
+
+</LinearLayout>

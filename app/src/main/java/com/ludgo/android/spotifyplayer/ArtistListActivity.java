@@ -7,9 +7,11 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -35,6 +37,7 @@ import kaaes.spotify.webapi.android.models.Pager;
 public class ArtistListActivity extends AppCompatActivity {
 
     private RecyclerView mArtistRecyclerView;
+    private EditText mArtistEditText;
     // Whether or not the activity is in two-pane mode,
     // i.e. running on a tablet device.
     private boolean mTwoPane;
@@ -51,14 +54,20 @@ public class ArtistListActivity extends AppCompatActivity {
         mArtistRecyclerView = (RecyclerView) findViewById(R.id.artist_list);
         assert mArtistRecyclerView != null;
 
+        mArtistEditText = (EditText) findViewById(R.id.searchArtist);
+        mArtistEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                searchArtist(v);
+                return true;
+            }
+        });
+
         if (findViewById(R.id.artist_detail_container) != null) {
             // The detail container view will be present only in the large-screen layouts.
             // If this view is present, then the activity should be in two-pane mode.
             mTwoPane = true;
         }
-
-        ArtistAsyncTask task = new ArtistAsyncTask();
-        task.execute("Nicki");
     }
 
     public class ArtistRecyclerViewAdapter
@@ -157,6 +166,15 @@ public class ArtistListActivity extends AppCompatActivity {
 
             // Populate RecyclerView with found artists
             mArtistRecyclerView.setAdapter(new ArtistListActivity.ArtistRecyclerViewAdapter(list));
+        }
+    }
+
+    // Allow user to input their artists' names
+    public void searchArtist(View v) {
+        String userInput = mArtistEditText.getText().toString();
+        if (!userInput.equals("")) {
+            ArtistAsyncTask task = new ArtistAsyncTask();
+            task.execute(userInput);
         }
     }
 }
