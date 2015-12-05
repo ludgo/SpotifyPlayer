@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ItemDetailActivity"
+            android:name=".ArtistDetailActivity"
             android:label="@string/title_item_detail"
             android:parentActivityName=".ArtistListActivity"
             android:theme="@style/AppTheme.NoActionBar">

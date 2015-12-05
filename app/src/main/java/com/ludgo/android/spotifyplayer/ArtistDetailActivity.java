@@ -11,17 +11,17 @@ import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 
 /**
- * An activity representing a single Item detail screen. This
+ * An activity representing a single Artist top tracks screen. This
  * activity is only used narrow width devices. On tablet-size devices,
  * item details are presented side-by-side with a list of items
  * in a {@link ArtistListActivity}.
  */
-public class ItemDetailActivity extends AppCompatActivity {
+public class ArtistDetailActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_item_detail);
+        setContentView(R.layout.activity_artist_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
 
@@ -53,12 +53,14 @@ public class ItemDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(ItemDetailFragment.ARG_ITEM_ID,
-                    getIntent().getStringExtra(ItemDetailFragment.ARG_ITEM_ID));
-            ItemDetailFragment fragment = new ItemDetailFragment();
+            arguments.putString(TrackListFragment.ARG_ARTIST_ID,
+                    getIntent().getStringExtra(TrackListFragment.ARG_ARTIST_ID));
+            arguments.putString(TrackListFragment.ARG_ARTIST_NAME,
+                    getIntent().getStringExtra(TrackListFragment.ARG_ARTIST_NAME));
+            TrackListFragment fragment = new TrackListFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.item_detail_container, fragment)
+                    .add(R.id.artist_detail_container, fragment)
                     .commit();
         }
     }
