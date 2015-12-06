@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,7 +41,7 @@ public class ArtistListActivity extends AppCompatActivity {
     private EditText mArtistEditText;
     // Whether or not the activity is in two-pane mode,
     // i.e. running on a tablet device.
-    private boolean mTwoPane;
+    static boolean mTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +116,7 @@ public class ArtistListActivity extends AppCompatActivity {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, ArtistDetailActivity.class);
                         intent.putExtra(TrackListFragment.ARG_ARTIST_ID, holder.mArtist.id);
+                        intent.putExtra(TrackListFragment.ARG_ARTIST_NAME, holder.mArtist.name);
 
                         context.startActivity(intent);
                     }
@@ -176,5 +178,16 @@ public class ArtistListActivity extends AppCompatActivity {
             ArtistAsyncTask task = new ArtistAsyncTask();
             task.execute(userInput);
         }
+    }
+
+    void launchDialog(List<FoundTrack> list, int position){
+        FoundTrack fd = list.get(position);
+        Log.d("!!!!!!", fd.name);
+        Log.d("!!!!!!", fd.duration + "");
+        Log.d("!!!!!!", fd.previewUrl);
+        Log.d("!!!!!!", fd.artistName);
+        Log.d("!!!!!!", fd.albumName);
+        Log.d("!!!!!!", fd.albumThumbnail);
+        Log.d("!!!!!!", fd.albumPoster);
     }
 }

@@ -5,10 +5,13 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
+
+import java.util.List;
 
 /**
  * An activity representing a single Artist top tracks screen. This
@@ -79,5 +82,9 @@ public class ArtistDetailActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    void launchDialog(List<FoundTrack> list, int position){
+        Log.d("!!!!!!", list.get(position).toString());
     }
 }

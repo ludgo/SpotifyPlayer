@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
@@ -30,13 +31,16 @@ import kaaes.spotify.webapi.android.models.Tracks;
  */
 public class TrackListFragment extends Fragment {
 
+    // Essential data from {@link ArtistListActivity}
+    private String mArtistId;
+    private String mArtistName;
+
+    private List<FoundTrack> mFoundTracks;
     private RecyclerView mTrackRecyclerView;
 
     // The fragment arguments representing chosen artist
     public static final String ARG_ARTIST_ID = "artist_id";
     public static final String ARG_ARTIST_NAME = "artist_name";
-
-    private String mArtistId;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -49,10 +53,11 @@ public class TrackListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_ARTIST_ID)) {
+        if (getArguments().containsKey(ARG_ARTIST_ID)
+                && getArguments().containsKey(ARG_ARTIST_NAME)) {
 
             mArtistId = getArguments().getString(ARG_ARTIST_ID);
-            String mArtistName = getArguments().getString(ARG_ARTIST_NAME);
+            mArtistName = getArguments().getString(ARG_ARTIST_NAME);
 
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
@@ -66,6 +71,8 @@ public class TrackListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.artist_detail, container, false);
+
+        mFoundTracks = new ArrayList<>();
 
         mTrackRecyclerView = (RecyclerView) rootView.findViewById(R.id.artist_detail);
         assert mTrackRecyclerView != null;
@@ -93,24 +100,38 @@ public class TrackListFragment extends Fragment {
         }
 
         @Override
-        public void onBindViewHolder(final ViewHolder holder, int position) {
+        public void onBindViewHolder(final ViewHolder holder, final int position) {
 
-            holder.mTrack = mTracks.get(position);
-
-            List<Image> albumImages = mTracks.get(position).album.images;
-            if (albumImages != null && albumImages.size() > 0){
-                String url = albumImages.get(albumImages.size() - 1).url;
-                Picasso.with(getContext()).load(url).into(holder.mAlbumImageView);
+            Track track = mTracks.get(position);
+            holder.mFoundTrack = new FoundTrack();
+            holder.mFoundTrack.name = track.name;
+            holder.mFoundTrack.duration = track.duration_ms;
+            holder.mFoundTrack.previewUrl = track.preview_url;
+            holder.mFoundTrack.artistName = mArtistName;
+            holder.mFoundTrack.albumName = track.album.name;
+            List<Image> albumImages = track.album.images;
+            if (albumImages.size() > 0){
+                holder.mFoundTrack.albumThumbnail = albumImages.get(albumImages.size() - 1).url;
+                for (int i = albumImages.size() - 1; i >= 0; i--) {
+                    if (albumImages.get(i).width >= 200 ) {
+                        holder.mFoundTrack.albumPoster = albumImages.get(i).url;
+                        break;
+                    }
+                }
             }
+            mFoundTracks.add(holder.mFoundTrack);
 
-            holder.mTrackNameView.setText(mTracks.get(position).name);
-
-            holder.mAlbumNameView.setText(mTracks.get(position).album.name);
-
+            Picasso.with(getContext()).load(holder.mFoundTrack.albumThumbnail).into(holder.mAlbumImageView);
+            holder.mTrackNameView.setText(holder.mFoundTrack.name);
+            holder.mAlbumNameView.setText(holder.mFoundTrack.albumName);
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    if(ArtistListActivity.mTwoPane){
+                        ((ArtistListActivity) getActivity()).launchDialog(mFoundTracks, position);
+                    } else {
+                        ((ArtistDetailActivity) getActivity()).launchDialog(mFoundTracks, position);
+                    }
                 }
             });
         }
@@ -125,7 +146,7 @@ public class TrackListFragment extends Fragment {
             public final ImageView mAlbumImageView;
             public final TextView mTrackNameView;
             public final TextView mAlbumNameView;
-            public Track mTrack;
+            public FoundTrack mFoundTrack;
 
             public ViewHolder(View view) {
                 super(view);
