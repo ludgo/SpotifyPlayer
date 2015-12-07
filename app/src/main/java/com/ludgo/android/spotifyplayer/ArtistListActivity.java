@@ -1,11 +1,11 @@
 package com.ludgo.android.spotifyplayer;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 
-import java.util.List;
+import java.util.ArrayList;
 
 /**
  * An activity representing a list of Artists. This activity
@@ -46,14 +46,19 @@ public class ArtistListActivity extends AppCompatActivity {
         }
     }
 
-    void launchDialog(List<FoundTrack> list, int position){
-        FoundTrack fd = list.get(position);
-        Log.d("!!!!!!", fd.name);
-        Log.d("!!!!!!", fd.duration + "");
-        Log.d("!!!!!!", fd.previewUrl);
-        Log.d("!!!!!!", fd.artistName);
-        Log.d("!!!!!!", fd.albumName);
-        Log.d("!!!!!!", fd.albumThumbnail);
-        Log.d("!!!!!!", fd.albumPoster);
+    void launchDialog(ArrayList<FoundTrack> list, int position){
+
+        if (mTwoPane) {
+            // The device is using a large layout, so show the fragment as a dialog
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            TrackDialogFragment dialogFragment = new TrackDialogFragment();
+
+            Bundle arguments = new Bundle();
+            arguments.putParcelableArrayList(TrackDialogFragment.ARG_TRACK_LIST, list);
+            arguments.putInt(TrackDialogFragment.ARG_TRACK_POSITION, position);
+            dialogFragment.setArguments(arguments);
+
+            dialogFragment.show(fragmentManager, "dialog_tag");
+        }
     }
 }

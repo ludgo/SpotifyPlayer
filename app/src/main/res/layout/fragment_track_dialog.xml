@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="500dp"
+    android:layout_height="500dp"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    tools:context=".TrackDialogFragment">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/artistDialog"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/albumDialog"/>
+
+    <ImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:id="@+id/imageDialog"
+        android:contentDescription="poster image"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/trackDialog"/>
+
+    <ProgressBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressDialog"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:text="previous"
+            android:drawableTop="@android:drawable/ic_media_previous"
+            android:id="@+id/previousDialog"/>
+
+        <Button
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:text="pause"
+            android:drawableTop="@android:drawable/ic_media_pause"
+            android:id="@+id/pauseDialog"/>
+
+        <Button
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:text="play"
+            android:drawableTop="@android:drawable/ic_media_play"
+            android:id="@+id/playDialog"/>
+
+        <Button
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:text="next"
+            android:drawableTop="@android:drawable/ic_media_next"
+            android:id="@+id/nextDialog"/>
+
+    </LinearLayout>
+
+
+
+</LinearLayout>
