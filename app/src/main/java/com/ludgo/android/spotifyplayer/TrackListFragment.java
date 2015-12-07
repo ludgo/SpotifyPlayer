@@ -31,16 +31,17 @@ import kaaes.spotify.webapi.android.models.Tracks;
  */
 public class TrackListFragment extends Fragment {
 
+    private static final String SAVE_TRACKS_TAG = "save_tracks_tag";
+    // The fragment arguments representing chosen artist
+    public static final String ARG_ARTIST_ID = "artist_id";
+    public static final String ARG_ARTIST_NAME = "artist_name";
+
     // Essential data from {@link ArtistListActivity}
     private String mArtistId;
     private String mArtistName;
 
-    private List<FoundTrack> mFoundTracks;
+    private ArrayList<FoundTrack> mFoundTracks;
     private RecyclerView mTrackRecyclerView;
-
-    // The fragment arguments representing chosen artist
-    public static final String ARG_ARTIST_ID = "artist_id";
-    public static final String ARG_ARTIST_NAME = "artist_name";
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -52,6 +53,8 @@ public class TrackListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mFoundTracks = new ArrayList<>();
 
         if (getArguments().containsKey(ARG_ARTIST_ID)
                 && getArguments().containsKey(ARG_ARTIST_NAME)) {
@@ -77,10 +80,27 @@ public class TrackListFragment extends Fragment {
         mTrackRecyclerView = (RecyclerView) rootView.findViewById(R.id.artist_detail);
         assert mTrackRecyclerView != null;
 
-        TrackAsyncTask task = new TrackAsyncTask();
-        task.execute(mArtistId);
+        if (savedInstanceState != null
+                && savedInstanceState.containsKey(SAVE_TRACKS_TAG)){
+            mFoundTracks = savedInstanceState.getParcelableArrayList(SAVE_TRACKS_TAG);
+            // Populate RecyclerView without search, saved data will be used
+            mTrackRecyclerView.setAdapter(
+                    new TrackListFragment.TrackRecyclerViewAdapter(null));
+        }
+        else {
+            TrackAsyncTask task = new TrackAsyncTask();
+            task.execute(mArtistId);
+        }
 
         return rootView;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (mFoundTracks != null){
+            outState.putParcelableArrayList(SAVE_TRACKS_TAG, mFoundTracks);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     public class TrackRecyclerViewAdapter
@@ -102,24 +122,31 @@ public class TrackListFragment extends Fragment {
         @Override
         public void onBindViewHolder(final ViewHolder holder, final int position) {
 
-            Track track = mTracks.get(position);
-            holder.mFoundTrack = new FoundTrack();
-            holder.mFoundTrack.name = track.name;
-            holder.mFoundTrack.duration = track.duration_ms;
-            holder.mFoundTrack.previewUrl = track.preview_url;
-            holder.mFoundTrack.artistName = mArtistName;
-            holder.mFoundTrack.albumName = track.album.name;
-            List<Image> albumImages = track.album.images;
-            if (albumImages.size() > 0){
-                holder.mFoundTrack.albumThumbnail = albumImages.get(albumImages.size() - 1).url;
-                for (int i = albumImages.size() - 1; i >= 0; i--) {
-                    if (albumImages.get(i).width >= 200 ) {
-                        holder.mFoundTrack.albumPoster = albumImages.get(i).url;
-                        break;
+            if (mTracks != null) {
+                // Search was performed
+                Track track = mTracks.get(position);
+                holder.mFoundTrack = new FoundTrack();
+                holder.mFoundTrack.name = track.name;
+                holder.mFoundTrack.duration = track.duration_ms;
+                holder.mFoundTrack.previewUrl = track.preview_url;
+                holder.mFoundTrack.artistName = mArtistName;
+                holder.mFoundTrack.albumName = track.album.name;
+                List<Image> albumImages = track.album.images;
+                if (albumImages.size() > 0) {
+                    holder.mFoundTrack.albumThumbnail = albumImages.get(albumImages.size() - 1).url;
+                    for (int i = albumImages.size() - 1; i >= 0; i--) {
+                        if (albumImages.get(i).width >= 200) {
+                            holder.mFoundTrack.albumPoster = albumImages.get(i).url;
+                            break;
+                        }
                     }
                 }
+                mFoundTracks.add(holder.mFoundTrack);
             }
-            mFoundTracks.add(holder.mFoundTrack);
+            else {
+                // Restore saved state
+                holder.mFoundTrack = mFoundTracks.get(position);
+            }
 
             Picasso.with(getContext()).load(holder.mFoundTrack.albumThumbnail).into(holder.mAlbumImageView);
             holder.mTrackNameView.setText(holder.mFoundTrack.name);
@@ -138,7 +165,7 @@ public class TrackListFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return mTracks.size();
+            return (mTracks == null) ? mFoundTracks.size() : mTracks.size();
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {

@@ -25,12 +25,6 @@ public class FoundArtist implements Parcelable {
         out.writeString(thumbnail);
     }
 
-//    private void readFromParcel(Parcel in) {
-//        id = in.readString();
-//        name = in.readString();
-//        thumbnail = in.readString();
-//    }
-
     public FoundArtist() {
         // Always also default images are to be provided
         this.thumbnail = "http://placehold.it/64x64";
