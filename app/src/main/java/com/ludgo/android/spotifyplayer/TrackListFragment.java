@@ -70,7 +70,7 @@ public class TrackListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.artist_detail, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_artist_detail, container, false);
 
         mFoundTracks = new ArrayList<>();
 

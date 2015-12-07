@@ -1,14 +1,10 @@
 package com.ludgo.android.spotifyplayer;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 
 import java.util.List;
@@ -27,15 +23,6 @@ public class ArtistDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_artist_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.detail_toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         // Show the Up button in the action bar.
         ActionBar actionBar = getSupportActionBar();
@@ -63,7 +50,7 @@ public class ArtistDetailActivity extends AppCompatActivity {
             TrackListFragment fragment = new TrackListFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.artist_detail_container, fragment)
+                    .replace(R.id.artist_detail_container, fragment)
                     .commit();
         }
     }
@@ -72,19 +59,22 @@ public class ArtistDetailActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            navigateUpTo(new Intent(this, ArtistListActivity.class));
+            // This ID represents the Home or Up button.
+            // Ensure that 'toolbar back' behaves just like bottom back'
+            onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
     void launchDialog(List<FoundTrack> list, int position){
-        Log.d("!!!!!!", list.get(position).toString());
+        FoundTrack fd = list.get(position);
+        Log.d("!!!!!!", fd.name);
+        Log.d("!!!!!!", fd.duration + "");
+        Log.d("!!!!!!", fd.previewUrl);
+        Log.d("!!!!!!", fd.artistName);
+        Log.d("!!!!!!", fd.albumName);
+        Log.d("!!!!!!", fd.albumThumbnail);
+        Log.d("!!!!!!", fd.albumPoster);
     }
 }
