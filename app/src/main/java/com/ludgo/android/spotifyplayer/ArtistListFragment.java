@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
@@ -29,9 +30,9 @@ import kaaes.spotify.webapi.android.models.Pager;
 
 public class ArtistListFragment extends Fragment {
 
-    private static final String SEARCH_TAG = "search_tag";
-    private String mSearchPhrase;
+    private static final String SAVE_ARTISTS_TAG = "save_artists_tag";
 
+    private ArrayList<FoundArtist> mFoundArtists;
     private RecyclerView mArtistRecyclerView;
 
     /**
@@ -46,6 +47,8 @@ public class ArtistListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_artist_list, container, false);
 
+        mFoundArtists = new ArrayList<>();
+
         mArtistRecyclerView = (RecyclerView) rootView.findViewById(R.id.artist_list);
         assert mArtistRecyclerView != null;
 
@@ -54,9 +57,9 @@ public class ArtistListFragment extends Fragment {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH){
-                    mSearchPhrase = v.getText().toString();
-                    if (!mSearchPhrase.equals("")) {
-                        searchArtist(mSearchPhrase);
+                    String userInput = v.getText().toString();
+                    if (!userInput.equals("")) {
+                        searchArtist(userInput);
                         return true;
                     }
                 }
@@ -65,9 +68,11 @@ public class ArtistListFragment extends Fragment {
         });
 
         if (savedInstanceState != null
-                && savedInstanceState.containsKey(SEARCH_TAG)){
-            mSearchPhrase = savedInstanceState.getString(SEARCH_TAG);
-            searchArtist(mSearchPhrase);
+                && savedInstanceState.containsKey(SAVE_ARTISTS_TAG)){
+            mFoundArtists = savedInstanceState.getParcelableArrayList(SAVE_ARTISTS_TAG);
+            // Populate RecyclerView without search, saved data will be used
+            mArtistRecyclerView.setAdapter(
+                    new ArtistListFragment.ArtistRecyclerViewAdapter(null));
         }
 
         return rootView;
@@ -75,8 +80,8 @@ public class ArtistListFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        if (mSearchPhrase != null){
-            outState.putString(SEARCH_TAG, mSearchPhrase);
+        if (mFoundArtists != null){
+            outState.putParcelableArrayList(SAVE_ARTISTS_TAG, mFoundArtists);
         }
         super.onSaveInstanceState(outState);
     }
@@ -100,23 +105,32 @@ public class ArtistListFragment extends Fragment {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
 
-            holder.mArtist = mArtists.get(position);
-
-            List<Image> artistImages = mArtists.get(position).images;
-            if (artistImages != null && artistImages.size() > 0){
-                String url = artistImages.get(artistImages.size() - 1).url;
-                Picasso.with(getActivity()).load(url).into(holder.mArtistImageView);
+            if (mArtists != null) {
+                // Search was performed
+                Artist artist = mArtists.get(position);
+                holder.mFoundArtist = new FoundArtist();
+                holder.mFoundArtist.id = artist.id;
+                holder.mFoundArtist.name = artist.name;
+                List<Image> artistImages = artist.images;
+                if (artistImages.size() > 0){
+                    holder.mFoundArtist.thumbnail = artistImages.get(artistImages.size() - 1).url;
+                }
+                mFoundArtists.add(holder.mFoundArtist);
+            }
+            else {
+                // Restore saved state
+                holder.mFoundArtist = mFoundArtists.get(position);
             }
 
-            holder.mArtistNameView.setText(mArtists.get(position).name);
-
+            Picasso.with(getContext()).load(holder.mFoundArtist.thumbnail).into(holder.mArtistImageView);
+            holder.mArtistNameView.setText(holder.mFoundArtist.name);
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (ArtistListActivity.mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(TrackListFragment.ARG_ARTIST_ID, holder.mArtist.id);
-                        arguments.putString(TrackListFragment.ARG_ARTIST_NAME, holder.mArtist.name);
+                        arguments.putString(TrackListFragment.ARG_ARTIST_ID, holder.mFoundArtist.id);
+                        arguments.putString(TrackListFragment.ARG_ARTIST_NAME, holder.mFoundArtist.name);
                         TrackListFragment fragment = new TrackListFragment();
                         fragment.setArguments(arguments);
                         getActivity().getSupportFragmentManager().beginTransaction()
@@ -125,8 +139,8 @@ public class ArtistListFragment extends Fragment {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, ArtistDetailActivity.class);
-                        intent.putExtra(TrackListFragment.ARG_ARTIST_ID, holder.mArtist.id);
-                        intent.putExtra(TrackListFragment.ARG_ARTIST_NAME, holder.mArtist.name);
+                        intent.putExtra(TrackListFragment.ARG_ARTIST_ID, holder.mFoundArtist.id);
+                        intent.putExtra(TrackListFragment.ARG_ARTIST_NAME, holder.mFoundArtist.name);
 
                         context.startActivity(intent);
                     }
@@ -136,14 +150,14 @@ public class ArtistListFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return mArtists.size();
+            return (mArtists == null) ? mFoundArtists.size() : mArtists.size();
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             public final View mView;
             public final ImageView mArtistImageView;
             public final TextView mArtistNameView;
-            public Artist mArtist;
+            public FoundArtist mFoundArtist;
 
             public ViewHolder(View view) {
                 super(view);
@@ -182,6 +196,7 @@ public class ArtistListFragment extends Fragment {
     }
 
     private void searchArtist(String phrase){
+        mFoundArtists = new ArrayList<>();
         ArtistAsyncTask task = new ArtistAsyncTask();
         task.execute(phrase);
     }
