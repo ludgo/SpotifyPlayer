@@ -46,6 +46,11 @@ public class ArtistListActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Launch {@link TrackDialogFragment} as dialog in the center of two pane layout
+     * @param list contains top tracks of the searched artist
+     * @param position imply which track to play
+     */
     void launchDialog(ArrayList<FoundTrack> list, int position){
 
         if (mTwoPane) {

@@ -19,10 +19,14 @@ import java.util.ArrayList;
 
 public class TrackDialogFragment extends DialogFragment {
 
+    // Necessary to recreate after orientation change
+    private static final String SAVE_TRACK_LIST_TAG = "save_track_list_tag";
+    private static final String SAVE_POSITION_TAG = "save_position_tag";
+
+    // Essential data come from {@link TrackListFragment}
     public static final String ARG_TRACK_LIST = "track_list";
     public static final String ARG_TRACK_POSITION = "track_position";
 
-    // Essential data from {@link TrackListFragment}
     private ArrayList<FoundTrack> mTrackList;
     private int mPosition;
 
@@ -42,9 +46,23 @@ public class TrackDialogFragment extends DialogFragment {
 
         mTrackList = new ArrayList<>();
 
-        if (getArguments().containsKey(ARG_TRACK_LIST)
+       if (savedInstanceState != null
+                && savedInstanceState.containsKey(SAVE_TRACK_LIST_TAG)
+                && savedInstanceState.containsKey(SAVE_POSITION_TAG)){
+            // restore previous state
+            mTrackList = savedInstanceState.getParcelableArrayList(SAVE_TRACK_LIST_TAG);
+            mPosition = savedInstanceState.getInt(SAVE_POSITION_TAG);
+        }
+        else if (getActivity().getIntent() != null
+                && getActivity().getIntent().hasExtra(ARG_TRACK_LIST)
+                && getActivity().getIntent().hasExtra(ARG_TRACK_POSITION)){
+            // one pane mode
+            mTrackList = getActivity().getIntent().getParcelableArrayListExtra(ARG_TRACK_LIST);
+            mPosition = getActivity().getIntent().getIntExtra(ARG_TRACK_POSITION, 0);
+        }
+        else if (getArguments().containsKey(ARG_TRACK_LIST)
                 && getArguments().containsKey(ARG_TRACK_POSITION)) {
-
+            // two pane mode
             mTrackList = getArguments().getParcelableArrayList(ARG_TRACK_LIST);
             mPosition = getArguments().getInt(ARG_TRACK_POSITION);
         }
@@ -86,6 +104,15 @@ public class TrackDialogFragment extends DialogFragment {
         return dialog;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (mTrackList != null){
+            outState.putParcelableArrayList(SAVE_TRACK_LIST_TAG, mTrackList);
+            outState.putInt(SAVE_POSITION_TAG, mPosition);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
     private void playTrack() {
 
         if (mTrackList != null
@@ -101,8 +128,8 @@ public class TrackDialogFragment extends DialogFragment {
 //        mTrackProgressBar;
 //        mPreviousButton;
 //        mPauseButton;
-//        Button mPlayButton;
-//        Button mNextButton;
+//        mPlayButton;
+//        mNextButton;
         }
     }
 }

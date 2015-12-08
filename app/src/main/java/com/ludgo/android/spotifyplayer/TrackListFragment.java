@@ -1,6 +1,8 @@
 package com.ludgo.android.spotifyplayer;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -31,12 +33,15 @@ import kaaes.spotify.webapi.android.models.Tracks;
  */
 public class TrackListFragment extends Fragment {
 
+    // Necessary to recreate after orientation change
     private static final String SAVE_TRACKS_TAG = "save_tracks_tag";
-    // The fragment arguments representing chosen artist
+
+    // Essential data come from {@link ArtistListActivity}
     public static final String ARG_ARTIST_ID = "artist_id";
     public static final String ARG_ARTIST_NAME = "artist_name";
 
-    // Essential data from {@link ArtistListActivity}
+    // The fragment arguments representing chosen artist,
+    // required only for an initial fetch, not to be stored later
     private String mArtistId;
     private String mArtistName;
 
@@ -79,6 +84,7 @@ public class TrackListFragment extends Fragment {
 
         mTrackRecyclerView = (RecyclerView) rootView.findViewById(R.id.artist_detail);
         assert mTrackRecyclerView != null;
+        mTrackRecyclerView.setAdapter(null);
 
         if (savedInstanceState != null
                 && savedInstanceState.containsKey(SAVE_TRACKS_TAG)){
@@ -87,7 +93,7 @@ public class TrackListFragment extends Fragment {
             mTrackRecyclerView.setAdapter(
                     new TrackListFragment.TrackRecyclerViewAdapter(null));
         }
-        else {
+        else if (mArtistId != null) {
             TrackAsyncTask task = new TrackAsyncTask();
             task.execute(mArtistId);
         }
@@ -157,7 +163,12 @@ public class TrackListFragment extends Fragment {
                     if(ArtistListActivity.mTwoPane){
                         ((ArtistListActivity) getActivity()).launchDialog(mFoundTracks, position);
                     } else {
-                        ((ArtistDetailActivity) getActivity()).launchDialog(mFoundTracks, position);
+                        Context context = v.getContext();
+                        Intent intent = new Intent(context, TrackPlayerActivity.class);
+                        intent.putExtra(TrackDialogFragment.ARG_TRACK_LIST, mFoundTracks);
+                        intent.putExtra(TrackDialogFragment.ARG_TRACK_POSITION, position);
+
+                        context.startActivity(intent);
                     }
                 }
             });

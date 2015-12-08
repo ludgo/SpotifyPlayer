@@ -30,6 +30,7 @@ import kaaes.spotify.webapi.android.models.Pager;
 
 public class ArtistListFragment extends Fragment {
 
+    // Necessary to recreate after orientation change
     private static final String SAVE_ARTISTS_TAG = "save_artists_tag";
 
     private ArrayList<FoundArtist> mFoundArtists;
@@ -51,6 +52,7 @@ public class ArtistListFragment extends Fragment {
 
         mArtistRecyclerView = (RecyclerView) rootView.findViewById(R.id.artist_list);
         assert mArtistRecyclerView != null;
+        mArtistRecyclerView.setAdapter(null);
 
         EditText editText = (EditText) rootView.findViewById(R.id.searchArtist);
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {

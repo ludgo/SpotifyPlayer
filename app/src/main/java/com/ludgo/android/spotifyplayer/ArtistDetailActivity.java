@@ -4,14 +4,11 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
-
-import java.util.List;
 
 /**
  * An activity representing a single Artist top tracks screen. This
- * activity is only used narrow width devices. On tablet-size devices,
+ * activity is only used with narrow width devices. On tablet-size devices,
  * item details are presented side-by-side with a list of items
  * in a {@link ArtistListActivity}.
  */
@@ -60,21 +57,10 @@ public class ArtistDetailActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == android.R.id.home) {
             // This ID represents the Home or Up button.
-            // Ensure that 'toolbar back' behaves just like bottom back'
+            // Ensure that 'toolbar back' behaves just like 'bottom back'
             onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    void launchDialog(List<FoundTrack> list, int position){
-        FoundTrack fd = list.get(position);
-        Log.d("!!!!!!", fd.name);
-        Log.d("!!!!!!", fd.duration + "");
-        Log.d("!!!!!!", fd.previewUrl);
-        Log.d("!!!!!!", fd.artistName);
-        Log.d("!!!!!!", fd.albumName);
-        Log.d("!!!!!!", fd.albumThumbnail);
-        Log.d("!!!!!!", fd.albumPoster);
     }
 }

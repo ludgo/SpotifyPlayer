@@ -29,6 +29,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ArtistListActivity" />
         </activity>
+        <activity
+            android:name=".TrackPlayerActivity"
+            android:label="@string/title_activity_track_player"
+            android:parentActivityName=".ArtistDetailActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ArtistDetailActivity" />
+        </activity>
     </application>
 
 </manifest>
