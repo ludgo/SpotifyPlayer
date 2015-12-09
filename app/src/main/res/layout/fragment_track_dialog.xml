@@ -1,73 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:minWidth="320dp"
     tools:context=".TrackDialogFragment">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/artistDialog"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/albumDialog"/>
-
-    <ImageView
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:id="@+id/imageDialog"
-        android:contentDescription="poster image"/>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/trackDialog"/>
-
-    <ProgressBar
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/progressDialog"/>
-
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_width="wrap_content"
+        android:orientation="vertical"
+        android:layout_height="wrap_content">
 
-        <Button
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:text="previous"
-            android:drawableTop="@android:drawable/ic_media_previous"
-            android:id="@+id/previousDialog"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/dialogArtist"
+            android:text="artist name"/>
 
-        <Button
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:text="pause"
-            android:drawableTop="@android:drawable/ic_media_pause"
-            android:id="@+id/pauseDialog"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/dialogAlbum"
+            android:text="album name"/>
 
-        <Button
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:text="play"
-            android:drawableTop="@android:drawable/ic_media_play"
-            android:id="@+id/playDialog"/>
+        <ImageView
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:id="@+id/dialogPoster"
+            android:contentDescription="poster image"/>
 
-        <Button
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:text="next"
-            android:drawableTop="@android:drawable/ic_media_next"
-            android:id="@+id/nextDialog"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/dialogTrack"
+            android:text="track name"/>
+
+        <SeekBar
+            android:id="@+id/dialogSeekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/dialogCurrentTime"
+                android:text="1.23"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/dialogTotalTime"
+                android:text="3.00"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:text="previous"
+                android:drawableTop="@android:drawable/ic_media_previous"
+                android:id="@+id/dialogPrevious"/>
+
+            <ToggleButton
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:text="playpause"
+                android:enabled="false"
+                android:drawableTop="@drawable/ic_play_pause"
+                android:id="@+id/dialogPlayPause"/>
+
+            <Button
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:text="next"
+                android:drawableTop="@android:drawable/ic_media_next"
+                android:id="@+id/dialogNext"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-
-
-</LinearLayout>
+</ScrollView>

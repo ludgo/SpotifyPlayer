@@ -1,6 +1,7 @@
 package com.ludgo.android.spotifyplayer;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -10,14 +11,17 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
+import android.widget.MediaController;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-public class TrackDialogFragment extends DialogFragment {
+public class TrackDialogFragment extends DialogFragment implements MediaController.MediaPlayerControl,
+        SeekBar.OnSeekBarChangeListener {
 
     // Necessary to recreate after orientation change
     private static final String SAVE_TRACK_LIST_TAG = "save_track_list_tag";
@@ -32,12 +36,13 @@ public class TrackDialogFragment extends DialogFragment {
 
     private TextView mArtistTextView;
     private TextView mAlbumTextView;
-    private ImageView mAlbumImageView;
+    private ImageView mPosterImageView;
     private TextView mTrackTextView;
-    private ProgressBar mTrackProgressBar;
+    private SeekBar mSeekBar;
+    private TextView mCurrentTimeTextView;
+    private TextView mTotalTimeTextView;
     private Button mPreviousButton;
-    private Button mPauseButton;
-    private Button mPlayButton;
+    private ToggleButton mPlayPauseButton;
     private Button mNextButton;
 
     @Override
@@ -76,15 +81,29 @@ public class TrackDialogFragment extends DialogFragment {
         // Inflate the layout to use as dialog or embedded fragment
         View rootView = inflater.inflate(R.layout.fragment_track_dialog, container, false);
 
-        mArtistTextView = (TextView) rootView.findViewById(R.id.artistDialog);
-        mAlbumTextView = (TextView) rootView.findViewById(R.id.albumDialog);
-        mAlbumImageView = (ImageView) rootView.findViewById(R.id.imageDialog);
-        mTrackTextView = (TextView) rootView.findViewById(R.id.trackDialog);
-        mTrackProgressBar = (ProgressBar) rootView.findViewById(R.id.progressDialog);
-        mPreviousButton = (Button) rootView.findViewById(R.id.previousDialog);
-        mPauseButton = (Button) rootView.findViewById(R.id.pauseDialog);
-        mPlayButton = (Button) rootView.findViewById(R.id.playDialog);
-        mNextButton = (Button) rootView.findViewById(R.id.nextDialog);
+        mArtistTextView = (TextView) rootView.findViewById(R.id.dialogArtist);
+        mAlbumTextView = (TextView) rootView.findViewById(R.id.dialogAlbum);
+        mPosterImageView = (ImageView) rootView.findViewById(R.id.dialogPoster);
+        mTrackTextView = (TextView) rootView.findViewById(R.id.dialogTrack);
+        mSeekBar = (SeekBar) rootView.findViewById(R.id.dialogSeekBar);
+        mSeekBar.setOnSeekBarChangeListener(this);
+        mCurrentTimeTextView = (TextView) rootView.findViewById(R.id.dialogCurrentTime);
+        mTotalTimeTextView = (TextView) rootView.findViewById(R.id.dialogTotalTime);
+        mPreviousButton = (Button) rootView.findViewById(R.id.dialogPrevious);
+        mPlayPauseButton = (ToggleButton) rootView.findViewById(R.id.dialogPlayPause);
+        mPlayPauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mPlayPauseButton.isChecked()) {
+                    // Checked - Pause icon visible
+                    start();
+                } else {
+                    // Unchecked - Play icon visible
+                    pause();
+                }
+            }
+        });
+        mNextButton = (Button) rootView.findViewById(R.id.dialogNext);
 
         playTrack();
 
@@ -113,23 +132,128 @@ public class TrackDialogFragment extends DialogFragment {
         super.onSaveInstanceState(outState);
     }
 
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//        if (fromUser) {
+//            seekTo(progress);
+//        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+        // TODO Auto-generated method stub
+    }
+
     private void playTrack() {
 
         if (mTrackList != null
                 && mPosition >= 0
                 && mPosition < mTrackList.size()){
 
-            FoundTrack currentTrack = mTrackList.get(mPosition);
+            final FoundTrack currentTrack = mTrackList.get(mPosition);
 
             mArtistTextView.setText(currentTrack.artistName);
             mAlbumTextView.setText(currentTrack.albumName);
-            Picasso.with(getActivity()).load(currentTrack.albumPoster).into(mAlbumImageView);
+            Picasso.with(getActivity()).load(currentTrack.albumPoster).into(mPosterImageView);
             mTrackTextView.setText(currentTrack.name);
-//        mTrackProgressBar;
-//        mPreviousButton;
-//        mPauseButton;
-//        mPlayButton;
-//        mNextButton;
+
+            SpotifyPlayerService.setUrl(currentTrack.previewUrl);
+            SpotifyPlayerService.setControlButton(mPlayPauseButton);
+            if (SpotifyPlayerService.getInstance() == null) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent intent = new Intent("PLAY_SPOTIFY");
+                        intent.setPackage("com.ludgo.android.spotifyplayer");
+                        getActivity().startService(intent);
+                    }
+                }).start();
+            }
+            else {
+                SpotifyPlayerService.getInstance().restartMusic();
+            }
+        }
+    }
+
+
+
+    @Override
+    public boolean canPause() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekBackward() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekForward() {
+        return true;
+    }
+
+    @Override
+    public int getAudioSessionId (){
+        return 0;
+    }
+
+
+    @Override
+    public int getBufferPercentage() {
+//        if (MusicService.getInstance() != null) {
+//            return MusicService.getInstance().getBufferPercentage();
+//        }
+        return 0;
+    }
+
+    @Override
+    public int getCurrentPosition() {
+//        if (MusicService.getInstance() != null) {
+//            return MusicService.getInstance().getCurrentPosition();
+//        }
+        return 0;
+    }
+
+    @Override
+    public int getDuration() {
+//        if (MusicService.getInstance() != null) {
+//            // return MusicService.getInstance().getMusicDuration();
+//        }
+        return 0;
+    }
+
+    @Override
+    public boolean isPlaying() {
+//        if (MusicService.getInstance() != null) {
+//            return MusicService.getInstance().isPlaying();
+//        }
+        return false;
+    }
+
+    @Override
+    public void pause() {
+        if (SpotifyPlayerService.getInstance() != null) {
+            SpotifyPlayerService.getInstance().pauseMusic();
+        }
+    }
+
+    @Override
+    public void seekTo(int pos) {
+//        if (MusicService.getInstance() != null) {
+//            MusicService.getInstance().seekMusicTo(pos);
+//        }
+
+    }
+
+    @Override
+    public void start() {
+        if (SpotifyPlayerService.getInstance() != null) {
+            SpotifyPlayerService.getInstance().startMusic();
         }
     }
 }
