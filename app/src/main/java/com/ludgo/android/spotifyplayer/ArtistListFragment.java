@@ -27,11 +27,13 @@ import kaaes.spotify.webapi.android.models.ArtistsPager;
 import kaaes.spotify.webapi.android.models.Image;
 import kaaes.spotify.webapi.android.models.Pager;
 
-
+/**
+ * UI for recycler view populated with artists via {@link ArtistRecyclerViewAdapter}
+ */
 public class ArtistListFragment extends Fragment {
 
     // Necessary to recreate after orientation change
-    private static final String SAVE_ARTISTS_TAG = "save_artists_tag";
+    public static final String ARTISTS_TAG = "artists_tag";
 
     private ArrayList<FoundArtist> mFoundArtists;
     private RecyclerView mArtistRecyclerView;
@@ -44,15 +46,19 @@ public class ArtistListFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mFoundArtists = new ArrayList<>();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_artist_list, container, false);
 
-        mFoundArtists = new ArrayList<>();
-
         mArtistRecyclerView = (RecyclerView) rootView.findViewById(R.id.artist_list);
         assert mArtistRecyclerView != null;
-        mArtistRecyclerView.setAdapter(null);
 
         EditText editText = (EditText) rootView.findViewById(R.id.searchArtist);
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -70,9 +76,9 @@ public class ArtistListFragment extends Fragment {
         });
 
         if (savedInstanceState != null
-                && savedInstanceState.containsKey(SAVE_ARTISTS_TAG)){
-            mFoundArtists = savedInstanceState.getParcelableArrayList(SAVE_ARTISTS_TAG);
-            // Populate RecyclerView without search, saved data will be used
+                && savedInstanceState.containsKey(ARTISTS_TAG)){
+            mFoundArtists = savedInstanceState.getParcelableArrayList(ARTISTS_TAG);
+            // Populate recycler view without search, saved data will be used
             mArtistRecyclerView.setAdapter(
                     new ArtistListFragment.ArtistRecyclerViewAdapter(null));
         }
@@ -83,11 +89,14 @@ public class ArtistListFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         if (mFoundArtists != null){
-            outState.putParcelableArrayList(SAVE_ARTISTS_TAG, mFoundArtists);
+            outState.putParcelableArrayList(ARTISTS_TAG, mFoundArtists);
         }
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * An adapter to populate this class' recycler view with artists
+     */
     public class ArtistRecyclerViewAdapter
             extends RecyclerView.Adapter<ArtistRecyclerViewAdapter.ViewHolder> {
 
@@ -131,8 +140,9 @@ public class ArtistListFragment extends Fragment {
                 public void onClick(View v) {
                     if (ArtistListActivity.mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(TrackListFragment.ARG_ARTIST_ID, holder.mFoundArtist.id);
-                        arguments.putString(TrackListFragment.ARG_ARTIST_NAME, holder.mFoundArtist.name);
+                        arguments.putString(TrackListFragment.ARTIST_ID_TAG, holder.mFoundArtist.id);
+                        arguments.putString(TrackListFragment.ARTIST_NAME_TAG, holder.mFoundArtist.name);
+
                         TrackListFragment fragment = new TrackListFragment();
                         fragment.setArguments(arguments);
                         getActivity().getSupportFragmentManager().beginTransaction()
@@ -141,8 +151,8 @@ public class ArtistListFragment extends Fragment {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, ArtistDetailActivity.class);
-                        intent.putExtra(TrackListFragment.ARG_ARTIST_ID, holder.mFoundArtist.id);
-                        intent.putExtra(TrackListFragment.ARG_ARTIST_NAME, holder.mFoundArtist.name);
+                        intent.putExtra(TrackListFragment.ARTIST_ID_TAG, holder.mFoundArtist.id);
+                        intent.putExtra(TrackListFragment.ARTIST_NAME_TAG, holder.mFoundArtist.name);
 
                         context.startActivity(intent);
                     }
@@ -181,7 +191,7 @@ public class ArtistListFragment extends Fragment {
 
             String searchPhrase = params[0];
 
-            // Let the integrated Spotify web api wrapper to request data on demand
+            // Let the integrated Spotify web api wrapper to request demanded data
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
             ArtistsPager artistsPager = spotify.searchArtists(searchPhrase);
@@ -192,11 +202,14 @@ public class ArtistListFragment extends Fragment {
         @Override
         protected void onPostExecute(List<Artist> list) {
 
-            // Populate RecyclerView with found artists
+            // Populate recycler view with found artists
             mArtistRecyclerView.setAdapter(new ArtistListFragment.ArtistRecyclerViewAdapter(list));
         }
     }
 
+    /**
+     * Perform api search on demand
+     */
     private void searchArtist(String phrase){
         mFoundArtists = new ArrayList<>();
         ArtistAsyncTask task = new ArtistAsyncTask();

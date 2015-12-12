@@ -7,9 +7,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 /**
- * An activity representing an artist's top tracks preview player screen. This
+ * An activity representing a single artist top tracks preview player screen. This
  * activity is only used with narrow width devices. On tablet-size devices,
- * player is presented in front of side-by-side master-detail layout
+ * the player is presented in the forefront of the side-by-side master-detail layout
  * in a {@link ArtistListActivity}.
  */
 public class TrackPlayerActivity extends AppCompatActivity {

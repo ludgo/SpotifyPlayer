@@ -8,6 +8,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * http://sapandiwakar.in/tutorial-how-to-manually-create-android-media-player-controls/
@@ -19,13 +20,13 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     private static final String ACTION_PLAY = "PLAY_SPOTIFY";
     private static SpotifyPlayerService mInstance = null;
 
-    // To be provided for every single track
-    private static String mUrl;
-
     private static MediaPlayer mMediaPlayer = null;
     private static int mBufferPercentage;
 
-    private static boolean isCompleted;
+    private static ArrayList<FoundTrack> mTrackList;
+    private static int mPosition;
+
+    // Indicates the previous track was playing when interrupted
     private static boolean wasPlaying;
 
 //    NotificationManager mNotificationManager;
@@ -49,7 +50,6 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     public void onCreate() {
         mInstance = this;
 //        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        Log.d("!!!!!!!!", "onCreate");
     }
 
     @Override
@@ -68,37 +68,38 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
             mMediaPlayer.setOnCompletionListener(this);
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC); // stream music from Spotify api
             initMediaPlayer();
-            Log.d("!!!!!!!!", "ACTION_PLAY");
         }
-        Log.d("!!!!!!!!", "onStartCommand");
-        return START_NOT_STICKY; // onStartCommand will be called again when service is killed
+        return START_NOT_STICKY; // onStartCommand won be called again when service is killed
     }
 
     @Override
     public void onDestroy() {
         if (mMediaPlayer != null) {
             mMediaPlayer.release();
-            Log.d("!!!!!!!!", "release..MediaPlayer");
         }
         mState = State.Retrieving;
-        Log.d("!!!!!!!!", "onDestroy");
     }
 
-    public static String getUrl() {
-        Log.d("!!!!!!!!", "getUrl " + mUrl);
-        return mUrl;
+    public static ArrayList<FoundTrack> getTrackList() {
+        return mTrackList;
     }
 
-    public static void setUrl(String url) {
-        mUrl = url;
-        Log.d("!!!!!!!!", "setUrl " + mUrl);
+    public static void setTrackList(ArrayList<FoundTrack> list) {
+        mTrackList = list;
+    }
+
+    public static int getPosition() {
+        return mPosition;
+    }
+
+    public static void setPosition(int position) {
+        mPosition = position;
     }
 
     private void initMediaPlayer() {
 
         try {
-            mMediaPlayer.setDataSource(mUrl);
-            Log.d("!!!!!!!!", "setDataSource" + mUrl);
+            mMediaPlayer.setDataSource(mTrackList.get(mPosition).previewUrl);
         } catch (IllegalArgumentException e) {
             // ...
             Log.d("!!!!!!!!", "1111111");
@@ -112,7 +113,6 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
 
         try {
             mMediaPlayer.prepareAsync(); // prepare async not to block main thread
-            Log.d("!!!!!!!!", "prepareAsync");
         } catch (IllegalStateException e) {
             // ...
             Log.d("!!!!!!!!", "444444444");
@@ -120,8 +120,20 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         mState = State.Preparing;
     }
 
+    public void restart() {
+        // Change the current track to another
+        wasPlaying = isPlaying();
+        mMediaPlayer.reset();
+        mState = State.Retrieving;
+        initMediaPlayer();
+    }
+
     public static SpotifyPlayerService getInstance() {
         return mInstance;
+    }
+
+    public static FoundTrack getCurrentTrack() {
+        return mTrackList.get(mPosition);
     }
 
     /**
@@ -133,9 +145,8 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         mState = State.Paused;
         if (wasPlaying){
             wasPlaying = false;
-            startMusic();
+            start();
         }
-        Log.d("!!!!!!!!", "onPrepared");
     }
 
     /**
@@ -144,7 +155,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         // TODO Auto-generated method stub
-        Log.d("!!!!!!!!", "onError");
+        Log.d("!!!!!!!!", "5555555555");
         return false;
     }
 
@@ -153,8 +164,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
      */
     @Override
     public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        mBufferPercentage = percent * getDurationMusic() / 100;
-        Log.d("!!!!!!!!", "onBufferingUpdate");
+        mBufferPercentage = percent * getDuration() / 100;
     }
 
     /**
@@ -162,104 +172,98 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
      */
     @Override
     public void onCompletion(MediaPlayer mp) {
-        isCompleted = true;
-        Log.d("!!!!!!!!", "onCompletion");
+        next();
     }
 
     /**
-     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     * pair method {@link TrackDialogFragment}
      */
-    public int getBufferPercentageMusic() {
-        Log.d("!!!!!!!!", "getBufferPercentageMusic");
+    public int getBufferPercentage() {
         return mBufferPercentage;
     }
 
     /**
-     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     * pair method {@link TrackDialogFragment}
      */
-    public int getCurrentPositionMusic() {
-        Log.d("!!!!!!!!", "getCurrentPositionMusic");
+    public int getCurrentPosition() {
         return mMediaPlayer.getCurrentPosition();
     }
 
     /**
-     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     * pair method {@link TrackDialogFragment}
      */
-    public int getDurationMusic() {
+    public int getDuration() {
         if (!mState.equals(State.Preparing) && !mState.equals(State.Retrieving)) {
-            Log.d("!!!!!!!!", "getDurationMusic");
             return mMediaPlayer.getDuration(); // in milliseconds
         }
         return 0;
     }
 
     /**
-     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     * pair method {@link TrackDialogFragment}
      */
-    public boolean isPlayingMusic() {
-        Log.d("!!!!!!!!", "isPlayingMusic");
+    public boolean isPlaying() {
         return mState.equals(State.Playing);
     }
 
     /**
-     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     * pair method {@link TrackDialogFragment}
      */
-    public void pauseMusic() {
+    public void pause() {
         if (mState.equals(State.Playing)) {
             mMediaPlayer.pause();
             mState = State.Paused;
 //            updateNotification(mSongTitle + "(paused)");
-            Log.d("!!!!!!!!", "pauseMusic");
-        }
-    }
-
-    /**
-     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
-     */
-    public void seekToMusic(int pos) {
-        if (mState.equals(State.Playing) || mState.equals(State.Paused)) {
-            mMediaPlayer.seekTo(pos);
-            Log.d("!!!!!!!!", "seekToMusic");
-        }
-    }
-
-    /**
-     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
-     */
-    public void startMusic() {
-        if (!mState.equals(State.Preparing) && !mState.equals(State.Retrieving)) {
-            mMediaPlayer.start();
-            mState = State.Playing;
-//            updateNotification(mSongTitle + "(playing)");
-            Log.d("!!!!!!!!", "startMusic -----------should play");
         }
     }
 
     /**
      * pair method {@link TrackDialogFragment}
      */
-    public boolean isReadyMusic() {
+    public void seekTo(int pos) {
+        if (mState.equals(State.Playing) || mState.equals(State.Paused)) {
+            mMediaPlayer.seekTo(pos);
+        }
+    }
+
+    /**
+     * pair method {@link TrackDialogFragment}
+     */
+    public void start() {
+        if (!mState.equals(State.Preparing) && !mState.equals(State.Retrieving)) {
+            mMediaPlayer.start();
+            mState = State.Playing;
+//            updateNotification(mSongTitle + "(playing)");
+        }
+    }
+
+    /**
+     * pair method {@link TrackDialogFragment}
+     */
+    public boolean isReady() {
         return mState.equals(State.Playing) || mState.equals(State.Paused);
     }
 
     /**
      * pair method {@link TrackDialogFragment}
      */
-    public boolean isCompletedMusic() {
-        return isCompleted;
+    public void previous(){
+        mPosition--;
+        if (mPosition < 0) {
+            mPosition = mTrackList.size() - 1;
+        }
+        restart();
     }
 
     /**
      * pair method {@link TrackDialogFragment}
      */
-    public void restartMusic() {
-        isCompleted = false;
-        wasPlaying = isPlayingMusic();
-        // Change the current track to another
-        mMediaPlayer.reset();
-        mState = State.Retrieving;
-        initMediaPlayer();
-        Log.d("!!!!!!!!", "restartMusic");
+    public void next(){
+        mPosition++;
+        if (mPosition > mTrackList.size() - 1) {
+            mPosition = 0;
+        }
+        restart();
     }
 
 

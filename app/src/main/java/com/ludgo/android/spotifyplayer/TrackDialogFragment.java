@@ -1,11 +1,9 @@
 package com.ludgo.android.spotifyplayer;
 
 import android.app.Dialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,22 +17,16 @@ import android.widget.ToggleButton;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
-
+/**
+ * UI for media player embedded in {@link TrackPlayerActivity} on handset devices
+ * or presented as dialog in {@link ArtistListActivity} on tablet-size devices.
+ * This informs {@link SpotifyPlayerService} about user interaction
+ */
 public class TrackDialogFragment extends DialogFragment implements MediaController.MediaPlayerControl,
         SeekBar.OnSeekBarChangeListener {
 
-    // Necessary to recreate after orientation change
-    private static final String SAVE_TRACK_LIST_TAG = "save_track_list_tag";
-    private static final String SAVE_POSITION_TAG = "save_position_tag";
-
-    // Essential data come from {@link TrackListFragment}
-    public static final String ARG_TRACK_LIST = "track_list";
-    public static final String ARG_TRACK_POSITION = "track_position";
-
-    private ArrayList<FoundTrack> mTrackList;
-    private int mPosition;
-    private String mPositionUrl;
+    private FoundTrack mCurrentTrack;
+    private int mCurrentPosition;
 
     private boolean musicThreadFinished;
 
@@ -48,32 +40,6 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     private Button mPreviousButton;
     private ToggleButton mPlayPauseButton;
     private Button mNextButton;
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mTrackList = new ArrayList<>();
-
-        if (savedInstanceState != null
-                && savedInstanceState.containsKey(SAVE_TRACK_LIST_TAG)
-                && savedInstanceState.containsKey(SAVE_POSITION_TAG)) {
-            // restore previous state
-            mTrackList = savedInstanceState.getParcelableArrayList(SAVE_TRACK_LIST_TAG);
-            mPosition = savedInstanceState.getInt(SAVE_POSITION_TAG);
-        } else if (getActivity().getIntent() != null
-                && getActivity().getIntent().hasExtra(ARG_TRACK_LIST)
-                && getActivity().getIntent().hasExtra(ARG_TRACK_POSITION)) {
-            // one pane mode
-            mTrackList = getActivity().getIntent().getParcelableArrayListExtra(ARG_TRACK_LIST);
-            mPosition = getActivity().getIntent().getIntExtra(ARG_TRACK_POSITION, 0);
-        } else if (getArguments().containsKey(ARG_TRACK_LIST)
-                && getArguments().containsKey(ARG_TRACK_POSITION)) {
-            // two pane mode
-            mTrackList = getArguments().getParcelableArrayList(ARG_TRACK_LIST);
-            mPosition = getArguments().getInt(ARG_TRACK_POSITION);
-        }
-    }
 
     /**
      * The system calls this to get the DialogFragment's layout, regardless
@@ -97,14 +63,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
         mPreviousButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mTrackList != null) {
-                    mPosition--;
-                    if (mPosition < 0) {
-                        mPosition = mTrackList.size() - 1;
-                    }
-                    setCurrentTrack();
-                    restart();
-                }
+                previous();
             }
         });
         mPlayPauseButton = (ToggleButton) rootView.findViewById(R.id.dialogPlayPause);
@@ -124,31 +83,10 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mTrackList != null) {
-                    mPosition++;
-                    if (mPosition > mTrackList.size() - 1) {
-                        mPosition = 0;
-                    }
-                    setCurrentTrack();
-                    restart();
-                }
+                next();
             }
         });
-
-        setCurrentTrack();
-        if (SpotifyPlayerService.getInstance() == null) {
-            SpotifyPlayerService.setUrl(mPositionUrl);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Intent intent = new Intent("PLAY_SPOTIFY");
-                    intent.setPackage("com.ludgo.android.spotifyplayer");
-                    getActivity().startService(intent);
-                }
-            }).start();
-        } else if (!mPositionUrl.equals(SpotifyPlayerService.getUrl())) {
-            restart();
-        }
+        updateCurrentTrack();
         runMusicControlThread();
 
         return rootView;
@@ -170,32 +108,27 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        if (mTrackList != null) {
-            outState.putParcelableArrayList(SAVE_TRACK_LIST_TAG, mTrackList);
-            outState.putInt(SAVE_POSITION_TAG, mPosition);
-        }
-        super.onSaveInstanceState(outState);
+    public void onDestroyView() {
+        // This thread means something only if UI exists
+        musicThreadFinished = true;
+        super.onDestroyView();
     }
 
-    private void setCurrentTrack() {
+    private void updateCurrentTrack() {
 
-        if (mPosition >= 0 && mPosition < mTrackList.size()) {
+        mCurrentTrack = SpotifyPlayerService.getCurrentTrack();
+        mCurrentPosition = SpotifyPlayerService.getPosition();
 
-            final FoundTrack currentTrack = mTrackList.get(mPosition);
-
-            mArtistTextView.setText(currentTrack.artistName);
-            mAlbumTextView.setText(currentTrack.albumName);
-            Picasso.with(getActivity()).load(currentTrack.albumPoster).into(mPosterImageView);
-            mTrackTextView.setText(currentTrack.name);
-
-            mPositionUrl = currentTrack.previewUrl;
-        }
+        mArtistTextView.setText(mCurrentTrack.artistName);
+        mAlbumTextView.setText(mCurrentTrack.albumName);
+        Picasso.with(getActivity()).load(mCurrentTrack.albumPoster).into(mPosterImageView);
+        mTrackTextView.setText(mCurrentTrack.name);
     }
 
     private void runMusicControlThread() {
 
         musicThreadFinished = false;
+        // Thread to check UI changes
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -219,26 +152,32 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mPlayPauseButton.setChecked(isPlaying());
-                                if (isReady()) {
-                                    mCurrentTimeTextView.setText(
-                                            Utilities.millisecondsToTime(currentPosition));
-                                    mTotalTimeTextView.setText(
-                                            Utilities.millisecondsToTime(duration));
-                                    mPlayPauseButton.setEnabled(true);
-                                    if (isCompleted()) {
-                                        mNextButton.performClick();
+                                try {
+                                    mPlayPauseButton.setChecked(isPlaying());
+                                    if (isReady()) {
+                                        mCurrentTimeTextView.setText(
+                                                Utilities.millisecondsToTime(currentPosition));
+                                        mTotalTimeTextView.setText(
+                                                Utilities.millisecondsToTime(duration));
+                                        mPlayPauseButton.setEnabled(true);
+                                    } else {
+                                        mCurrentTimeTextView.setText("-:--");
+                                        mTotalTimeTextView.setText("-:--");
+                                        mPlayPauseButton.setEnabled(false);
                                     }
-                                } else {
-                                    mCurrentTimeTextView.setText("-:--");
-                                    mTotalTimeTextView.setText("-:--");
-                                    mPlayPauseButton.setEnabled(false);
+                                    if (mCurrentPosition != SpotifyPlayerService.getPosition()
+                                            || !mCurrentTrack.equals(SpotifyPlayerService.getCurrentTrack())){
+                                        updateCurrentTrack();
+                                    }
+                                } catch (NullPointerException e) {
+                                    // This thread means something only if UI exists
+                                    musicThreadFinished = true;
                                 }
                             }
                         });
                     } catch (NullPointerException e) {
+                        // This thread means something only if UI exists
                         musicThreadFinished = true;
-                        Log.d("****", "musicThreadFinished");
                     }
                 }
             }
@@ -260,7 +199,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
      */
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-        // TODO Auto-generated method stub
+        // User pressed seek bar
     }
 
     /**
@@ -268,7 +207,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
      */
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        // TODO Auto-generated method stub
+        // User stopped pressing seek bar
     }
 
     /**
@@ -310,7 +249,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     @Override
     public int getBufferPercentage() {
         if (SpotifyPlayerService.getInstance() != null) {
-            return SpotifyPlayerService.getInstance().getBufferPercentageMusic();
+            return SpotifyPlayerService.getInstance().getBufferPercentage();
         }
         return 0;
     }
@@ -321,7 +260,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     @Override
     public int getCurrentPosition() {
         if (SpotifyPlayerService.getInstance() != null) {
-            return SpotifyPlayerService.getInstance().getCurrentPositionMusic();
+            return SpotifyPlayerService.getInstance().getCurrentPosition();
         }
         return 0;
     }
@@ -332,7 +271,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     @Override
     public int getDuration() {
         if (SpotifyPlayerService.getInstance() != null) {
-            return SpotifyPlayerService.getInstance().getDurationMusic();
+            return SpotifyPlayerService.getInstance().getDuration();
         }
         return 0;
     }
@@ -343,7 +282,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     @Override
     public boolean isPlaying() {
         return SpotifyPlayerService.getInstance() != null
-                && SpotifyPlayerService.getInstance().isPlayingMusic();
+                && SpotifyPlayerService.getInstance().isPlaying();
     }
 
     /**
@@ -352,7 +291,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     @Override
     public void pause() {
         if (SpotifyPlayerService.getInstance() != null) {
-            SpotifyPlayerService.getInstance().pauseMusic();
+            SpotifyPlayerService.getInstance().pause();
         }
     }
 
@@ -362,7 +301,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     @Override
     public void seekTo(int pos) {
         if (SpotifyPlayerService.getInstance() != null) {
-            SpotifyPlayerService.getInstance().seekToMusic(pos);
+            SpotifyPlayerService.getInstance().seekTo(pos);
         }
     }
 
@@ -372,7 +311,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
     @Override
     public void start() {
         if (SpotifyPlayerService.getInstance() != null) {
-            SpotifyPlayerService.getInstance().startMusic();
+            SpotifyPlayerService.getInstance().start();
         }
     }
 
@@ -381,24 +320,24 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
      */
     public boolean isReady() {
         return SpotifyPlayerService.getInstance() != null
-                && SpotifyPlayerService.getInstance().isReadyMusic();
+                && SpotifyPlayerService.getInstance().isReady();
     }
 
     /**
      * pair method {@link SpotifyPlayerService}
      */
-    public boolean isCompleted() {
-        return SpotifyPlayerService.getInstance() != null
-                && SpotifyPlayerService.getInstance().isCompletedMusic();
-    }
-
-    /**
-     * pair method {@link SpotifyPlayerService}
-     */
-    public void restart() {
-        SpotifyPlayerService.setUrl(mPositionUrl);
+    public void previous() {
         if (SpotifyPlayerService.getInstance() != null) {
-            SpotifyPlayerService.getInstance().restartMusic();
+            SpotifyPlayerService.getInstance().previous();
+        }
+    }
+
+    /**
+     * pair method {@link SpotifyPlayerService}
+     */
+    public void next() {
+        if (SpotifyPlayerService.getInstance() != null) {
+            SpotifyPlayerService.getInstance().next();
         }
     }
 }

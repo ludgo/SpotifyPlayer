@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,19 +27,16 @@ import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 
 /**
- * A fragment representing a single Artist top tracks screen.
- * This fragment is either contained in a {@link ArtistListActivity}
- * in two-pane mode (on tablets) or a {@link ArtistDetailActivity}
- * on handsets.
+ * UI for recycler view populated with single artist top tracks via {@link TrackRecyclerViewAdapter}
+ * This informs {@link SpotifyPlayerService} what to play
  */
 public class TrackListFragment extends Fragment {
 
     // Necessary to recreate after orientation change
-    private static final String SAVE_TRACKS_TAG = "save_tracks_tag";
-
-    // Essential data come from {@link ArtistListActivity}
-    public static final String ARG_ARTIST_ID = "artist_id";
-    public static final String ARG_ARTIST_NAME = "artist_name";
+    // or essential data come from {@link ArtistListFragment}
+    public static final String TRACKS_TAG = "tracks_tag";
+    public static final String ARTIST_ID_TAG = "artist_id_tag";
+    public static final String ARTIST_NAME_TAG = "artist_name_tag";
 
     // The fragment arguments representing chosen artist,
     // required only for an initial fetch, not to be stored later
@@ -61,11 +59,11 @@ public class TrackListFragment extends Fragment {
 
         mFoundTracks = new ArrayList<>();
 
-        if (getArguments().containsKey(ARG_ARTIST_ID)
-                && getArguments().containsKey(ARG_ARTIST_NAME)) {
+        if (getArguments().containsKey(ARTIST_ID_TAG)
+                && getArguments().containsKey(ARTIST_NAME_TAG)) {
 
-            mArtistId = getArguments().getString(ARG_ARTIST_ID);
-            mArtistName = getArguments().getString(ARG_ARTIST_NAME);
+            mArtistId = getArguments().getString(ARTIST_ID_TAG);
+            mArtistName = getArguments().getString(ARTIST_NAME_TAG);
 
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
@@ -84,16 +82,16 @@ public class TrackListFragment extends Fragment {
 
         mTrackRecyclerView = (RecyclerView) rootView.findViewById(R.id.artist_detail);
         assert mTrackRecyclerView != null;
-        mTrackRecyclerView.setAdapter(null);
 
         if (savedInstanceState != null
-                && savedInstanceState.containsKey(SAVE_TRACKS_TAG)){
-            mFoundTracks = savedInstanceState.getParcelableArrayList(SAVE_TRACKS_TAG);
-            // Populate RecyclerView without search, saved data will be used
+                && savedInstanceState.containsKey(TRACKS_TAG)){
+            mFoundTracks = savedInstanceState.getParcelableArrayList(TRACKS_TAG);
+            // Populate recycler view without search, saved data will be used
             mTrackRecyclerView.setAdapter(
                     new TrackListFragment.TrackRecyclerViewAdapter(null));
         }
         else if (mArtistId != null) {
+            // Initiate async task right in the beginning
             TrackAsyncTask task = new TrackAsyncTask();
             task.execute(mArtistId);
         }
@@ -104,11 +102,14 @@ public class TrackListFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         if (mFoundTracks != null){
-            outState.putParcelableArrayList(SAVE_TRACKS_TAG, mFoundTracks);
+            outState.putParcelableArrayList(TRACKS_TAG, mFoundTracks);
         }
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * An adapter to populate this class' recycler view with single artists top tracks
+     */
     public class TrackRecyclerViewAdapter
             extends RecyclerView.Adapter<TrackRecyclerViewAdapter.ViewHolder> {
 
@@ -160,15 +161,34 @@ public class TrackListFragment extends Fragment {
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(ArtistListActivity.mTwoPane){
-                        ((ArtistListActivity) getActivity()).launchDialog(mFoundTracks, position);
-                    } else {
-                        Context context = v.getContext();
-                        Intent intent = new Intent(context, TrackPlayerActivity.class);
-                        intent.putExtra(TrackDialogFragment.ARG_TRACK_LIST, mFoundTracks);
-                        intent.putExtra(TrackDialogFragment.ARG_TRACK_POSITION, position);
 
-                        context.startActivity(intent);
+                    if (SpotifyPlayerService.getInstance() == null) {
+                        SpotifyPlayerService.setTrackList(mFoundTracks);
+                        SpotifyPlayerService.setPosition(position);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Intent intent = new Intent("PLAY_SPOTIFY");
+                                intent.setPackage("com.ludgo.android.spotifyplayer");
+                                getActivity().startService(intent);
+                            }
+                        }).start();
+                    }
+                    else if (position != SpotifyPlayerService.getPosition()
+                            || !mFoundTracks.equals(SpotifyPlayerService.getTrackList())) {
+                        SpotifyPlayerService.setTrackList(mFoundTracks);
+                        SpotifyPlayerService.setPosition(position);
+                        SpotifyPlayerService.getInstance().restart();
+                    }
+
+                    if(ArtistListActivity.mTwoPane){
+                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                        TrackDialogFragment dialogFragment = new TrackDialogFragment();
+                        dialogFragment.show(fragmentManager, "unused_tag");
+                    }
+                    else {
+                        Context context = v.getContext();
+                        context.startActivity(new Intent(context, TrackPlayerActivity.class));
                     }
                 }
             });
@@ -197,7 +217,7 @@ public class TrackListFragment extends Fragment {
     }
 
     /**
-     * Fetch top tracks by specified artist from the Spotify web api
+     * Fetch single artist top tracks by specified artist from the Spotify web api
      * and display them to the user
      */
     private class TrackAsyncTask extends AsyncTask<String, Void, List<Track>> {
@@ -207,7 +227,7 @@ public class TrackListFragment extends Fragment {
 
             String artistId = params[0];
 
-            // Let the integrated Spotify web api wrapper to request data on demand
+            // Let the integrated Spotify web api wrapper to request demanded data
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
             Tracks artistTracks = spotify.getArtistTopTrack(artistId, "us");
@@ -217,7 +237,7 @@ public class TrackListFragment extends Fragment {
         @Override
         protected void onPostExecute(List<Track> list) {
 
-            // Populate RecyclerView with found top tracks
+            // Populate recycler view with found top tracks
             mTrackRecyclerView.setAdapter(new TrackListFragment.TrackRecyclerViewAdapter(list));
         }
     }
