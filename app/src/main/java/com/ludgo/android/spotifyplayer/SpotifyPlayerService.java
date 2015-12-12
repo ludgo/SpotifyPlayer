@@ -6,7 +6,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.ToggleButton;
 
 import java.io.IOException;
 
@@ -14,22 +13,26 @@ import java.io.IOException;
  * http://sapandiwakar.in/tutorial-how-to-manually-create-android-media-player-controls/
  */
 public class SpotifyPlayerService extends Service implements MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnErrorListener, MediaPlayer.OnBufferingUpdateListener {
+        MediaPlayer.OnErrorListener, MediaPlayer.OnBufferingUpdateListener,
+        MediaPlayer.OnCompletionListener {
 
     private static final String ACTION_PLAY = "PLAY_SPOTIFY";
-    private static String mUrl;
     private static SpotifyPlayerService mInstance = null;
-    private static ToggleButton mControlButton;
 
-    private static MediaPlayer mMediaPlayer = null; // The Media Player
-    private static int mBufferPosition;
+    // To be provided for every single track
+    private static String mUrl;
+
+    private static MediaPlayer mMediaPlayer = null;
+    private static int mBufferPercentage;
+
+    private static boolean isCompleted;
+    private static boolean wasPlaying;
 
 //    NotificationManager mNotificationManager;
 //    Notification mNotification = null;
 //    final int NOTIFICATION_ID = 1;
 
-
-    // indicates the state our service:
+    // Indicates the state of the service:
     enum State {
         Retrieving, // the MediaRetriever is retrieving music
         Stopped, // media player is stopped and not prepared to play
@@ -38,7 +41,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         // paused in this state if we don't have audio focus. But we stay in this state
         // so that we know we have to resume playback once we get focus back)
         Paused // playback paused (media player ready!)
-    };
+    }
 
     static State mState = State.Retrieving;
 
@@ -51,24 +54,48 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
 
     @Override
     public IBinder onBind(Intent arg0) {
+        // Don't allow binding
         return null;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getAction().equals(ACTION_PLAY)) {
-            mMediaPlayer = new MediaPlayer(); // initialize it here
+            mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnErrorListener(this);
             mMediaPlayer.setOnBufferingUpdateListener(this);
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mMediaPlayer.setOnCompletionListener(this);
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC); // stream music from Spotify api
             initMediaPlayer();
-            Log.d("!!!!!!!!", "onStartCommand");
+            Log.d("!!!!!!!!", "ACTION_PLAY");
         }
-        return START_STICKY;
+        Log.d("!!!!!!!!", "onStartCommand");
+        return START_NOT_STICKY; // onStartCommand will be called again when service is killed
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            Log.d("!!!!!!!!", "release..MediaPlayer");
+        }
+        mState = State.Retrieving;
+        Log.d("!!!!!!!!", "onDestroy");
+    }
+
+    public static String getUrl() {
+        Log.d("!!!!!!!!", "getUrl " + mUrl);
+        return mUrl;
+    }
+
+    public static void setUrl(String url) {
+        mUrl = url;
+        Log.d("!!!!!!!!", "setUrl " + mUrl);
     }
 
     private void initMediaPlayer() {
+
         try {
             mMediaPlayer.setDataSource(mUrl);
             Log.d("!!!!!!!!", "setDataSource" + mUrl);
@@ -84,7 +111,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         }
 
         try {
-            mMediaPlayer.prepareAsync(); // prepare async to not block main thread
+            mMediaPlayer.prepareAsync(); // prepare async not to block main thread
             Log.d("!!!!!!!!", "prepareAsync");
         } catch (IllegalStateException e) {
             // ...
@@ -93,28 +120,27 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         mState = State.Preparing;
     }
 
-    public void restartMusic() {
-        // Restart music
-        Log.d("!!!!!!!!", "restartMusic");
-        mControlButton.setEnabled(false);
-        mState = State.Retrieving;
-        mMediaPlayer.reset();
-        initMediaPlayer();
+    public static SpotifyPlayerService getInstance() {
+        return mInstance;
     }
 
-    protected void setBufferPosition(int progress) {
-        mBufferPosition = progress;
-    }
-
-    /** Called when MediaPlayer is ready */
+    /**
+     * MediaPlayer.OnPreparedListener
+     */
     @Override
     public void onPrepared(MediaPlayer player) {
-        // Begin playing music
-        Log.d("!!!!!!!!", "onPrepared");
+        // MediaPlayer is ready
         mState = State.Paused;
-        mControlButton.setEnabled(true);
+        if (wasPlaying){
+            wasPlaying = false;
+            startMusic();
+        }
+        Log.d("!!!!!!!!", "onPrepared");
     }
 
+    /**
+     * MediaPlayer.OnErrorListener
+     */
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         // TODO Auto-generated method stub
@@ -122,19 +148,62 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         return false;
     }
 
+    /**
+     * MediaPlayer.OnBufferingUpdateListener
+     */
     @Override
-    public void onDestroy() {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.release();
-            Log.d("!!!!!!!!", "onDestroy");
+    public void onBufferingUpdate(MediaPlayer mp, int percent) {
+        mBufferPercentage = percent * getDurationMusic() / 100;
+        Log.d("!!!!!!!!", "onBufferingUpdate");
+    }
+
+    /**
+     * MediaPlayer.OnCompletionListener
+     */
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        isCompleted = true;
+        Log.d("!!!!!!!!", "onCompletion");
+    }
+
+    /**
+     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     */
+    public int getBufferPercentageMusic() {
+        Log.d("!!!!!!!!", "getBufferPercentageMusic");
+        return mBufferPercentage;
+    }
+
+    /**
+     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     */
+    public int getCurrentPositionMusic() {
+        Log.d("!!!!!!!!", "getCurrentPositionMusic");
+        return mMediaPlayer.getCurrentPosition();
+    }
+
+    /**
+     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     */
+    public int getDurationMusic() {
+        if (!mState.equals(State.Preparing) && !mState.equals(State.Retrieving)) {
+            Log.d("!!!!!!!!", "getDurationMusic");
+            return mMediaPlayer.getDuration(); // in milliseconds
         }
-        mState = State.Retrieving;
+        return 0;
     }
 
-    public MediaPlayer getMediaPlayer() {
-        return mMediaPlayer;
+    /**
+     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     */
+    public boolean isPlayingMusic() {
+        Log.d("!!!!!!!!", "isPlayingMusic");
+        return mState.equals(State.Playing);
     }
 
+    /**
+     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     */
     public void pauseMusic() {
         if (mState.equals(State.Playing)) {
             mMediaPlayer.pause();
@@ -144,8 +213,20 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
+    /**
+     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     */
+    public void seekToMusic(int pos) {
+        if (mState.equals(State.Playing) || mState.equals(State.Paused)) {
+            mMediaPlayer.seekTo(pos);
+            Log.d("!!!!!!!!", "seekToMusic");
+        }
+    }
+
+    /**
+     * MediaController.MediaPlayerControl, pair method {@link TrackDialogFragment}
+     */
     public void startMusic() {
-        Log.d("!!!!!!!!", "startMusic");
         if (!mState.equals(State.Preparing) && !mState.equals(State.Retrieving)) {
             mMediaPlayer.start();
             mState = State.Playing;
@@ -154,52 +235,42 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
-    public boolean isPlaying() {
-        return mState.equals(State.Playing);
+    /**
+     * pair method {@link TrackDialogFragment}
+     */
+    public boolean isReadyMusic() {
+        return mState.equals(State.Playing) || mState.equals(State.Paused);
     }
 
-    public int getMusicDuration() {
-        // Return current music duration
-        return 0;
+    /**
+     * pair method {@link TrackDialogFragment}
+     */
+    public boolean isCompletedMusic() {
+        return isCompleted;
     }
 
-    public int getCurrentPosition() {
-        // Return current position
-        return 0;
+    /**
+     * pair method {@link TrackDialogFragment}
+     */
+    public void restartMusic() {
+        isCompleted = false;
+        wasPlaying = isPlayingMusic();
+        // Change the current track to another
+        mMediaPlayer.reset();
+        mState = State.Retrieving;
+        initMediaPlayer();
+        Log.d("!!!!!!!!", "restartMusic");
     }
 
-    public int getBufferPercentage() {
-        return mBufferPosition;
-    }
 
-    public void seekMusicTo(int pos) {
-        // Seek music to pos
-    }
 
-    public static SpotifyPlayerService getInstance() {
-        return mInstance;
-    }
 
-    public static void setUrl(String url) {
-        mUrl = url;
-        Log.d("!!!!!!!!", "setUrl --" + mUrl + "--");
-    }
 
-    public static void setControlButton(ToggleButton controlButton) {
-        mControlButton = controlButton;
-        Log.d("!!!!!!!!", "setControlButton");
-    }
-
-    @Override
-    public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        setBufferPosition(percent * getMusicDuration() / 100);
-        Log.d("!!!!!!!!", "onBufferingUpdate");
-    }
-
-    /** Updates the notification. */
-    void updateNotification(String text) {
-        // Notify NotificationManager of new intent
-    }
+// notification
+//    /** Updates the notification. */
+//    void updateNotification(String text) {
+//        // Notify NotificationManager of new intent
+//    }
 
 //    /**
 //     * Configures service as a foreground service. A foreground service is a service that's doing something the user is
