@@ -1,6 +1,8 @@
 package com.ludgo.android.spotifyplayer;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
@@ -13,6 +15,8 @@ import android.support.v7.widget.Toolbar;
  * using two vertical panes. Later, a music player dialog can be displayed in the forefront.
  */
 public class ArtistListActivity extends AppCompatActivity {
+
+    public static final String TRACK_DIALOG_FRAGMENT_TAG = "tdf_tag";
 
     // Whether or not the activity is in two-pane mode,
     static boolean mTwoPane;
@@ -38,5 +42,36 @@ public class ArtistListActivity extends AppCompatActivity {
             // The detail container view will be present only in the large-screen layouts.
             mTwoPane = true;
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (getIntent() != null
+                && getIntent().hasExtra(SpotifyPlayerService.FOREGROUND_NOTIFICATION_TAG)){
+
+            getIntent().removeExtra(SpotifyPlayerService.FOREGROUND_NOTIFICATION_TAG);
+            showDialog();
+        }
+    }
+
+    /**
+     * Show {@link TrackDialogFragment} in two pane mode only
+     */
+    public void showDialog(){
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        TrackDialogFragment existingFragment =
+                (TrackDialogFragment) fragmentManager.findFragmentByTag(TRACK_DIALOG_FRAGMENT_TAG);
+        if (existingFragment != null){
+            existingFragment.dismiss();
+        }
+        TrackDialogFragment dialogFragment = new TrackDialogFragment();
+        dialogFragment.show(fragmentManager, TRACK_DIALOG_FRAGMENT_TAG);
     }
 }

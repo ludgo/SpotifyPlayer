@@ -86,6 +86,8 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
                 next();
             }
         });
+
+        SpotifyPlayerService.setNotificationActivity(getActivity());
         updateCurrentTrack();
         runMusicControlThread();
 
@@ -118,7 +120,7 @@ public class TrackDialogFragment extends DialogFragment implements MediaControll
 
         mCurrentTrack = SpotifyPlayerService.getCurrentTrack();
         mCurrentPosition = SpotifyPlayerService.getPosition();
-
+        // Show appropriate user interface
         mArtistTextView.setText(mCurrentTrack.artistName);
         mAlbumTextView.setText(mCurrentTrack.albumName);
         Picasso.with(getActivity()).load(mCurrentTrack.albumPoster).into(mPosterImageView);

@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -182,9 +181,7 @@ public class TrackListFragment extends Fragment {
                     }
 
                     if(ArtistListActivity.mTwoPane){
-                        FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                        TrackDialogFragment dialogFragment = new TrackDialogFragment();
-                        dialogFragment.show(fragmentManager, "unused_tag");
+                        ((ArtistListActivity) getActivity()).showDialog();
                     }
                     else {
                         Context context = v.getContext();

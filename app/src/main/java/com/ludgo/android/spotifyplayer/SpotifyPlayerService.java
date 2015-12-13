@@ -1,21 +1,36 @@
 package com.ludgo.android.spotifyplayer;
 
+import android.app.Activity;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
 /**
+ * A service to stream and play music from Spotify web api.
+ * It is foreground when the audio is heard, background otherwise.
+ * Provided information accessed thanks to Spotify web api wrapper comes from {@link TrackListFragment}.
+ * Can be controlled by user from UI in {@link TrackDialogFragment}.
+ *
  * http://sapandiwakar.in/tutorial-how-to-manually-create-android-media-player-controls/
  */
 public class SpotifyPlayerService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnBufferingUpdateListener,
         MediaPlayer.OnCompletionListener {
+
+    public static final String FOREGROUND_NOTIFICATION_TAG = "fn_tag";
+    private static final int NOTIFICATION_ID = 1; // not null integer
+    private static Activity mNotificationActivity;
+    private static Bitmap mNotificationLargeIcon;
 
     private static final String ACTION_PLAY = "PLAY_SPOTIFY";
     private static SpotifyPlayerService mInstance = null;
@@ -29,14 +44,9 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     // Indicates the previous track was playing when interrupted
     private static boolean wasPlaying;
 
-//    NotificationManager mNotificationManager;
-//    Notification mNotification = null;
-//    final int NOTIFICATION_ID = 1;
-
     // Indicates the state of the service:
     enum State {
         Retrieving, // the MediaRetriever is retrieving music
-        Stopped, // media player is stopped and not prepared to play
         Preparing, // media player is preparing...
         Playing, // playback active (media player ready!). (but the media player may actually be
         // paused in this state if we don't have audio focus. But we stay in this state
@@ -49,7 +59,6 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     @Override
     public void onCreate() {
         mInstance = this;
-//        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     }
 
     @Override
@@ -69,7 +78,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC); // stream music from Spotify api
             initMediaPlayer();
         }
-        return START_NOT_STICKY; // onStartCommand won be called again when service is killed
+        return START_NOT_STICKY; // onStartCommand won't be called again when service is killed
     }
 
     @Override
@@ -96,7 +105,21 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         mPosition = position;
     }
 
+    /**
+     * Prepare media player with new url
+     */
     private void initMediaPlayer() {
+
+        if (getCurrentTrack().albumThumbnail != null){
+            // Prepare notification's large icon in the background
+            BitmapFromUrlTask task = new BitmapFromUrlTask(){
+                @Override
+                protected void onPostExecute(Bitmap bitmap) {
+                    mNotificationLargeIcon = bitmap;
+                }
+            };
+            task.execute(getCurrentTrack().albumThumbnail);
+        }
 
         try {
             mMediaPlayer.setDataSource(mTrackList.get(mPosition).previewUrl);
@@ -120,9 +143,13 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         mState = State.Preparing;
     }
 
+    /**
+     * Stop the existing media player and force it to stream again
+     */
     public void restart() {
-        // Change the current track to another
+        stopForeground(true); // ..and delete notification from status bar
         wasPlaying = isPlaying();
+        // Change the current track to another
         mMediaPlayer.reset();
         mState = State.Retrieving;
         initMediaPlayer();
@@ -134,6 +161,13 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
 
     public static FoundTrack getCurrentTrack() {
         return mTrackList.get(mPosition);
+    }
+
+    /**
+     * @param contextActivity will be launched when user clicks on the status bar notification
+     */
+    public static void setNotificationActivity(Activity contextActivity){
+        mNotificationActivity = contextActivity;
     }
 
     /**
@@ -191,10 +225,11 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
 
     /**
      * pair method {@link TrackDialogFragment}
+     * @return the duration of the track in milliseconds
      */
     public int getDuration() {
         if (!mState.equals(State.Preparing) && !mState.equals(State.Retrieving)) {
-            return mMediaPlayer.getDuration(); // in milliseconds
+            return mMediaPlayer.getDuration();
         }
         return 0;
     }
@@ -211,9 +246,9 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
      */
     public void pause() {
         if (mState.equals(State.Playing)) {
+            stopForeground(true); // ..and delete notification from status bar
             mMediaPlayer.pause();
             mState = State.Paused;
-//            updateNotification(mSongTitle + "(paused)");
         }
     }
 
@@ -233,11 +268,12 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         if (!mState.equals(State.Preparing) && !mState.equals(State.Retrieving)) {
             mMediaPlayer.start();
             mState = State.Playing;
-//            updateNotification(mSongTitle + "(playing)");
+            setUpAsForeground(); // ..and display notification in status bar
         }
     }
 
     /**
+     * Indicates if the music is either playing or paused
      * pair method {@link TrackDialogFragment}
      */
     public boolean isReady() {
@@ -245,6 +281,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     }
 
     /**
+     * To the previous track in the track list
      * pair method {@link TrackDialogFragment}
      */
     public void previous(){
@@ -256,6 +293,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     }
 
     /**
+     * To the following track in the track list
      * pair method {@link TrackDialogFragment}
      */
     public void next(){
@@ -266,30 +304,44 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
         restart();
     }
 
+    /**
+     * Configures service as a foreground service. The user is actively aware of playing music,
+     * which appears to the user as a notification. The notification lifetime lasts until
+     * the music is paused or otherwise interrupted, then stopForeground() is called and
+     * the visible notification is removed.
+     */
+    private void setUpAsForeground() {
 
+        FoundTrack currentTrack = mTrackList.get(mPosition);
+        FoundTrack nextTrack = mTrackList.get(
+                (mTrackList.size() - 1 == mPosition) ? 0 : mPosition + 1);
 
+        // Inform user about the audio
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Spotify Player")
+                .setContentText(currentTrack.artistName + ": " + currentTrack.name)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setLargeIcon(mNotificationLargeIcon)
+                .setStyle(new NotificationCompat.InboxStyle()
+                        .setSummaryText("Now playing..")
+                        .addLine(currentTrack.artistName)
+                        .addLine(currentTrack.name)
+                        .addLine("album " + currentTrack.albumName)
+                        .addLine("Next:")
+                        .addLine(nextTrack.artistName + ": " + nextTrack.name)
+                );
 
+        // Create an intent to launch {@link TrackDialogfragment} via it's context activity
+        Intent notificationIntent = new Intent(this, mNotificationActivity.getClass());
+        notificationIntent.putExtra(FOREGROUND_NOTIFICATION_TAG, true); // the value means nothing
+        // Flags to prefer existing activity to creating a new one
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-// notification
-//    /** Updates the notification. */
-//    void updateNotification(String text) {
-//        // Notify NotificationManager of new intent
-//    }
+        PendingIntent contentIntent = PendingIntent.getActivity(
+                this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
 
-//    /**
-//     * Configures service as a foreground service. A foreground service is a service that's doing something the user is
-//     * actively aware of (such as playing music), and must appear to the user as a notification. That's why we create
-//     * the notification here.
-//     */
-//    void setUpAsForeground(String text) {
-//        PendingIntent pi =
-//                PendingIntent.getActivity(getApplicationContext(), 0, new Intent(getApplicationContext(), MusicActivity.class),
-//                        PendingIntent.FLAG_UPDATE_CURRENT);
-//        mNotification = new Notification();
-//        mNotification.tickerText = text;
-//        mNotification.icon = R.drawable.ic_mshuffle_icon;
-//        mNotification.flags |= Notification.FLAG_ONGOING_EVENT;
-//        mNotification.setLatestEventInfo(getApplicationContext(), getResources().getString(R.string.app_name), text, pi);
-//        startForeground(NOTIFICATION_ID, mNotification);
-//    }
+        startForeground(NOTIFICATION_ID, builder.build());
+    }
 }
