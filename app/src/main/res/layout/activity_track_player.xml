@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".TrackPlayerActivity">
+    tools:context=".ui.TrackPlayerActivity">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar"
@@ -26,7 +26,7 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <fragment android:name="com.ludgo.android.spotifyplayer.TrackDialogFragment"
+        <fragment android:name="com.ludgo.android.spotifyplayer.ui.TrackDialogFragment"
             android:id="@+id/track_player_fragment"
             android:layout_width="match_parent"
             android:keepScreenOn="true"

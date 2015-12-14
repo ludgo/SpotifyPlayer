@@ -1,4 +1,4 @@
-package com.ludgo.android.spotifyplayer;
+package com.ludgo.android.spotifyplayer.ui;
 
 import android.app.Activity;
 import android.content.Context;
@@ -14,6 +14,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.ludgo.android.spotifyplayer.R;
+import com.ludgo.android.spotifyplayer.model.FoundTrack;
+import com.ludgo.android.spotifyplayer.service.SpotifyPlayerService;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -180,7 +183,7 @@ public class TrackListFragment extends Fragment {
                         SpotifyPlayerService.getInstance().restart();
                     }
 
-                    if(ArtistListActivity.mTwoPane){
+                    if(getResources().getBoolean(R.bool.activity_artist_list_two_pane)){
                         ((ArtistListActivity) getActivity()).showDialog();
                     }
                     else {

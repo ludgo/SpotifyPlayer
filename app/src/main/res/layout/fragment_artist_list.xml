@@ -7,7 +7,7 @@
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
     android:orientation="vertical"
-    tools:context=".ArtistListFragment">
+    tools:context=".ui.ArtistListFragment">
 
     <EditText
         android:id="@+id/searchArtist"

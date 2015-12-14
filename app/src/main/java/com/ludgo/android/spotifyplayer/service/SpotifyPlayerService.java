@@ -1,4 +1,4 @@
-package com.ludgo.android.spotifyplayer;
+package com.ludgo.android.spotifyplayer.service;
 
 import android.app.Activity;
 import android.app.Notification;
@@ -11,6 +11,12 @@ import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import com.ludgo.android.spotifyplayer.R;
+import com.ludgo.android.spotifyplayer.ui.TrackDialogFragment;
+import com.ludgo.android.spotifyplayer.ui.TrackListFragment;
+import com.ludgo.android.spotifyplayer.model.FoundTrack;
+import com.ludgo.android.spotifyplayer.util.BitmapFromUrlTask;
 
 import java.io.IOException;
 import java.util.ArrayList;

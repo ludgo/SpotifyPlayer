@@ -1,4 +1,4 @@
-package com.ludgo.android.spotifyplayer;
+package com.ludgo.android.spotifyplayer.util;
 
 public class Utilities {
 

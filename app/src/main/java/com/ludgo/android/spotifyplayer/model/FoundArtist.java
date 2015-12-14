@@ -1,4 +1,4 @@
-package com.ludgo.android.spotifyplayer;
+package com.ludgo.android.spotifyplayer.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;

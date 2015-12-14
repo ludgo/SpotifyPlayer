@@ -1,4 +1,4 @@
-package com.ludgo.android.spotifyplayer;
+package com.ludgo.android.spotifyplayer.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +15,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.ludgo.android.spotifyplayer.model.FoundArtist;
+import com.ludgo.android.spotifyplayer.R;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -138,7 +140,8 @@ public class ArtistListFragment extends Fragment {
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (ArtistListActivity.mTwoPane) {
+                    // Pass selected artist and launch new fragment
+                    if (getResources().getBoolean(R.bool.activity_artist_list_two_pane)) {
                         Bundle arguments = new Bundle();
                         arguments.putString(TrackListFragment.ARTIST_ID_TAG, holder.mFoundArtist.id);
                         arguments.putString(TrackListFragment.ARTIST_NAME_TAG, holder.mFoundArtist.name);

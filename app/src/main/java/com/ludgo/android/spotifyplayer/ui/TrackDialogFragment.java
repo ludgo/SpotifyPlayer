@@ -1,4 +1,4 @@
-package com.ludgo.android.spotifyplayer;
+package com.ludgo.android.spotifyplayer.ui;
 
 import android.app.Dialog;
 import android.os.Bundle;
@@ -15,6 +15,10 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.ludgo.android.spotifyplayer.R;
+import com.ludgo.android.spotifyplayer.util.Utilities;
+import com.ludgo.android.spotifyplayer.model.FoundTrack;
+import com.ludgo.android.spotifyplayer.service.SpotifyPlayerService;
 import com.squareup.picasso.Picasso;
 
 /**

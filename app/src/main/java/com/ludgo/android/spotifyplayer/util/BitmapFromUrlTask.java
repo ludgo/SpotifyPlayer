@@ -1,4 +1,4 @@
-package com.ludgo.android.spotifyplayer;
+package com.ludgo.android.spotifyplayer.util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

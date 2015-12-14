@@ -1,10 +1,13 @@
-package com.ludgo.android.spotifyplayer;
+package com.ludgo.android.spotifyplayer.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+
+import com.ludgo.android.spotifyplayer.R;
+import com.ludgo.android.spotifyplayer.service.SpotifyPlayerService;
 
 /**
  * An activity representing a list of artists. This activity has different presentations
@@ -17,9 +20,6 @@ import android.support.v7.widget.Toolbar;
 public class ArtistListActivity extends AppCompatActivity {
 
     public static final String TRACK_DIALOG_FRAGMENT_TAG = "tdf_tag";
-
-    // Whether or not the activity is in two-pane mode,
-    static boolean mTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,16 +37,14 @@ public class ArtistListActivity extends AppCompatActivity {
                     .replace(R.id.artist_list_container, fragment)
                     .commit();
         }
-
-        if (findViewById(R.id.artist_detail_container) != null) {
-            // The detail container view will be present only in the large-screen layouts.
-            mTwoPane = true;
-        }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        /**
+         * Due to notification intent in {@link SpotifyPlayerService}
+         */
         setIntent(intent);
     }
 
@@ -55,7 +53,7 @@ public class ArtistListActivity extends AppCompatActivity {
         super.onResume();
         if (getIntent() != null
                 && getIntent().hasExtra(SpotifyPlayerService.FOREGROUND_NOTIFICATION_TAG)){
-
+            // User has clicked on notification in status bar
             getIntent().removeExtra(SpotifyPlayerService.FOREGROUND_NOTIFICATION_TAG);
             showDialog();
         }
@@ -64,14 +62,18 @@ public class ArtistListActivity extends AppCompatActivity {
     /**
      * Show {@link TrackDialogFragment} in two pane mode only
      */
-    public void showDialog(){
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        TrackDialogFragment existingFragment =
-                (TrackDialogFragment) fragmentManager.findFragmentByTag(TRACK_DIALOG_FRAGMENT_TAG);
-        if (existingFragment != null){
-            existingFragment.dismiss();
+    public void showDialog() {
+        if (getResources().getBoolean(R.bool.activity_artist_list_two_pane)) {
+
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            // Do not duplicate dialogs!
+            TrackDialogFragment existingFragment =
+                    (TrackDialogFragment) fragmentManager.findFragmentByTag(TRACK_DIALOG_FRAGMENT_TAG);
+            if (existingFragment != null) {
+                existingFragment.dismiss();
+            }
+            TrackDialogFragment dialogFragment = new TrackDialogFragment();
+            dialogFragment.show(fragmentManager, TRACK_DIALOG_FRAGMENT_TAG);
         }
-        TrackDialogFragment dialogFragment = new TrackDialogFragment();
-        dialogFragment.show(fragmentManager, TRACK_DIALOG_FRAGMENT_TAG);
     }
 }
