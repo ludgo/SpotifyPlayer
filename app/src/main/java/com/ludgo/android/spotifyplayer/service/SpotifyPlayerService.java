@@ -116,34 +116,36 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
      */
     private void initMediaPlayer() {
 
-        if (getCurrentTrack().albumThumbnail != null){
+        if (getCurrentTrack().albumThumbnail != null) {
             // Prepare notification's large icon in the background
-            BitmapFromUrlTask task = new BitmapFromUrlTask(){
+            BitmapFromUrlTask task = new BitmapFromUrlTask() {
                 @Override
                 protected void onPostExecute(Bitmap bitmap) {
                     mNotificationLargeIcon = bitmap;
                 }
             };
             task.execute(getCurrentTrack().albumThumbnail);
+        } else {
+            // TODO ..here default drawable will be provided
         }
 
         try {
             mMediaPlayer.setDataSource(mTrackList.get(mPosition).previewUrl);
         } catch (IllegalArgumentException e) {
-            // ...
+            // TODO
             Log.d("!!!!!!!!", "1111111");
         } catch (IllegalStateException e) {
-            // ...
+            // TODO
             Log.d("!!!!!!!!", "22222222222");
         } catch (IOException e) {
-            // ...
+            // TODO
             Log.d("!!!!!!!!", "33333333");
         }
 
         try {
             mMediaPlayer.prepareAsync(); // prepare async not to block main thread
         } catch (IllegalStateException e) {
-            // ...
+            // TODO
             Log.d("!!!!!!!!", "444444444");
         }
         mState = State.Preparing;
@@ -154,6 +156,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
      */
     public void restart() {
         stopForeground(true); // ..and delete notification from status bar
+        // Remember it if the media player was in the playing state
         wasPlaying = isPlaying();
         // Change the current track to another
         mMediaPlayer.reset();
@@ -183,6 +186,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
     public void onPrepared(MediaPlayer player) {
         // MediaPlayer is ready
         mState = State.Paused;
+        // Maintain previous state - play if was playing before
         if (wasPlaying){
             wasPlaying = false;
             start();
@@ -194,7 +198,7 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
      */
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        // TODO Auto-generated method stub
+        // TODO
         Log.d("!!!!!!!!", "5555555555");
         return false;
     }
@@ -324,21 +328,24 @@ public class SpotifyPlayerService extends Service implements MediaPlayer.OnPrepa
 
         // Inform user about the audio
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Spotify Player")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(getResources().getString(R.string.app_name))
                 .setContentText(currentTrack.artistName + ": " + currentTrack.name)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setLargeIcon(mNotificationLargeIcon)
                 .setStyle(new NotificationCompat.InboxStyle()
-                        .setSummaryText("Now playing..")
-                        .addLine(currentTrack.artistName)
-                        .addLine(currentTrack.name)
-                        .addLine("album " + currentTrack.albumName)
-                        .addLine("Next:")
-                        .addLine(nextTrack.artistName + ": " + nextTrack.name)
+                                .setSummaryText(getResources().getString(R.string.foreground_notification_playing))
+                                .addLine(currentTrack.artistName)
+                                .addLine(currentTrack.name)
+                                .addLine(getResources().getString(R.string.foreground_notification_album)
+                                        + " " + currentTrack.albumName)
+                                .addLine(getResources().getString(R.string.foreground_notification_next))
+                                .addLine(nextTrack.artistName + ": " + nextTrack.name)
                 );
 
-        // Create an intent to launch {@link TrackDialogfragment} via it's context activity
+        /**
+         * Create an intent to launch {@link TrackDialogFragment} via it's context activity
+         */
         Intent notificationIntent = new Intent(this, mNotificationActivity.getClass());
         notificationIntent.putExtra(FOREGROUND_NOTIFICATION_TAG, true); // the value means nothing
         // Flags to prefer existing activity to creating a new one

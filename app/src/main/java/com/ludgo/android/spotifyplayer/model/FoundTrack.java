@@ -1,7 +1,10 @@
 package com.ludgo.android.spotifyplayer.model;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.ludgo.android.spotifyplayer.R;
 
 /**
  * An object model representing a single track available at Spotify web api
@@ -33,27 +36,11 @@ public class FoundTrack implements Parcelable {
         out.writeString(albumPoster);
     }
 
-    public FoundTrack() {
-        // Always also default images are to be provided
-        this.albumThumbnail = "http://placehold.it/64x64";
-        this.albumPoster = "http://placehold.it/200x200";
+    public FoundTrack(Context context) {
+        this.name = context.getResources().getString(R.string.model_track_name_default);
+        this.artistName = context.getResources().getString(R.string.model_artist_name_default);
+        this.albumName = context.getResources().getString(R.string.model_album_name_default);
     }
-
-//    protected FoundTrack(String name,
-//                         long duration,
-//                         String previewUrl,
-//                         String artistName,
-//                         String albumName,
-//                         String albumThumbnail,
-//                         String albumPoster) {
-//        this.name = name;
-//        this.duration = duration;
-//        this.previewUrl = previewUrl;
-//        this.artistName = artistName;
-//        this.albumName = albumName;
-//        this.albumThumbnail = albumThumbnail;
-//        this.albumPoster = albumPoster;
-//    }
 
     private FoundTrack(Parcel in) {
         name = in.readString();

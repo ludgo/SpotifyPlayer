@@ -134,7 +134,7 @@ public class TrackListFragment extends Fragment {
             if (mTracks != null) {
                 // Search was performed
                 Track track = mTracks.get(position);
-                holder.mFoundTrack = new FoundTrack();
+                holder.mFoundTrack = new FoundTrack(getActivity());
                 holder.mFoundTrack.name = track.name;
                 holder.mFoundTrack.duration = track.duration_ms;
                 holder.mFoundTrack.previewUrl = track.preview_url;

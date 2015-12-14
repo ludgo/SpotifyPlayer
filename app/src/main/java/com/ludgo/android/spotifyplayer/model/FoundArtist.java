@@ -1,7 +1,10 @@
 package com.ludgo.android.spotifyplayer.model;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.ludgo.android.spotifyplayer.R;
 
 /**
  * An object model representing a single artist listed at Spotify web api
@@ -25,18 +28,9 @@ public class FoundArtist implements Parcelable {
         out.writeString(thumbnail);
     }
 
-    public FoundArtist() {
-        // Always also default images are to be provided
-        this.thumbnail = "http://placehold.it/64x64";
+    public FoundArtist(Context context) {
+        this.name = context.getResources().getString(R.string.model_artist_name_default);
     }
-
-//    protected FoundArtist(String id,
-//                         String name,
-//                         String thumbnail) {
-//        this.id = id;
-//        this.name = name;
-//        this.thumbnail = thumbnail;
-//    }
 
     private FoundArtist(Parcel in) {
         id = in.readString();

@@ -121,7 +121,7 @@ public class ArtistListFragment extends Fragment {
             if (mArtists != null) {
                 // Search was performed
                 Artist artist = mArtists.get(position);
-                holder.mFoundArtist = new FoundArtist();
+                holder.mFoundArtist = new FoundArtist(getActivity());
                 holder.mFoundArtist.id = artist.id;
                 holder.mFoundArtist.name = artist.name;
                 List<Image> artistImages = artist.images;

@@ -2,4 +2,14 @@
     <string name="app_name">Spotify Player</string>
     <string name="title_item_detail">Item Detail</string>
     <string name="title_activity_track_player">TrackPlayerActivity</string>
+
+    <!-- Strings for the notification within SpotifyPlayerService -->
+    <string name="foreground_notification_playing">Now playing..</string>
+    <string name="foreground_notification_album">album</string>
+    <string name="foreground_notification_next">Next:</string>
+
+    <!-- Default names for variables in app's model objects -->
+    <string name="model_artist_name_default">-Unknown- Artist</string>
+    <string name="model_track_name_default">-Unknown- Track</string>
+    <string name="model_album_name_default">-Unknown- Album</string>
 </resources>
