@@ -9,6 +9,8 @@ import android.view.MenuItem;
 import com.ludgo.android.spotifyplayer.R;
 
 /**
+ * Detail activity in master-detail layout with {@link ArtistListActivity}
+ *
  * An activity representing a single artist top tracks screen. This
  * activity is only used with narrow width devices. On tablet-size devices,
  * top tracks are presented side-by-side with all artists

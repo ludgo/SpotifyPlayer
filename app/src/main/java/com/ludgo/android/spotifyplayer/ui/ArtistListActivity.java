@@ -10,6 +10,8 @@ import com.ludgo.android.spotifyplayer.R;
 import com.ludgo.android.spotifyplayer.service.SpotifyPlayerService;
 
 /**
+ * Master activity in master-detail layout with {@link ArtistDetailActivity}
+ *
  * An activity representing a list of artists. This activity has different presentations
  * for handset and tablet-size devices.
  * On handsets, the activity presents a list of artists, which when touched,
@@ -26,7 +28,7 @@ public class ArtistListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_artist_list);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 

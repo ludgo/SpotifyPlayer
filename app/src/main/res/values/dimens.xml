@@ -6,6 +6,7 @@
     <dimen name="text_margin">16dp</dimen>
 
     <dimen name="artist_list_width">@dimen/match_parent</dimen>
+    <!-- The constant value for match_parent dimension choice is always -1 -->
     <item name="match_parent"
         format="integer"
         type="dimen">-1</item>
