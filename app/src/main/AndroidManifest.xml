@@ -24,7 +24,6 @@
         </activity>
         <activity
             android:name=".ui.ArtistDetailActivity"
-            android:label="@string/title_item_detail"
             android:parentActivityName=".ui.ArtistListActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
@@ -33,7 +32,6 @@
         </activity>
         <activity
             android:name=".ui.TrackPlayerActivity"
-            android:label="@string/title_activity_track_player"
             android:parentActivityName=".ui.ArtistDetailActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data

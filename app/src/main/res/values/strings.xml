@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Spotify Player</string>
-    <string name="title_item_detail">Item Detail</string>
-    <string name="title_activity_track_player">TrackPlayerActivity</string>
+    <string name="title_trending">Trending %1$s</string>
+    <string name="title_top10_port">Spotify Top 10</string>
+    <string name="title_top10_land">%1$s Top 10 %2$s</string>
 
     <!-- Strings for the notification within SpotifyPlayerService -->
     <string name="foreground_notification_playing">Now playing..</string>

@@ -1,13 +1,14 @@
 package com.ludgo.android.spotifyplayer.ui;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,12 +67,6 @@ public class TrackListFragment extends Fragment {
 
             mArtistId = getArguments().getString(ARTIST_ID_TAG);
             mArtistName = getArguments().getString(ARTIST_NAME_TAG);
-
-            Activity activity = this.getActivity();
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
-            if (appBarLayout != null) {
-                appBarLayout.setTitle(mArtistName);
-            }
         }
     }
 
@@ -86,13 +81,12 @@ public class TrackListFragment extends Fragment {
         assert mTrackRecyclerView != null;
 
         if (savedInstanceState != null
-                && savedInstanceState.containsKey(TRACKS_TAG)){
+                && savedInstanceState.containsKey(TRACKS_TAG)) {
             mFoundTracks = savedInstanceState.getParcelableArrayList(TRACKS_TAG);
             // Populate recycler view without search, saved data will be used
             mTrackRecyclerView.setAdapter(
                     new TrackListFragment.TrackRecyclerViewAdapter(null));
-        }
-        else if (mArtistId != null) {
+        } else if (mArtistId != null) {
             // Initiate async task right in the beginning
             TrackAsyncTask task = new TrackAsyncTask();
             task.execute(mArtistId);
@@ -102,8 +96,44 @@ public class TrackListFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+
+        if (!getResources().getBoolean(R.bool.activity_artist_list_two_pane)) {
+
+            if (getActivity().getResources().getConfiguration().orientation
+                    == Configuration.ORIENTATION_PORTRAIT) {
+                // Set a multiple line title for portrait orientation
+                TextView trendingTextView = (TextView) getActivity().findViewById(R.id.title_trending);
+                if (trendingTextView != null) {
+                    trendingTextView.setText(String.format(
+                            getActivity().getResources().getString(R.string.title_trending),
+                            "US"
+                    ));
+                }
+                CollapsingToolbarLayout ctl =
+                        (CollapsingToolbarLayout) getActivity().findViewById(R.id.toolbar_layout);
+                if (ctl != null) {
+                    ctl.setTitle(mArtistName);
+                }
+            } else {
+                // Set a single line title for landscape orientation
+                Toolbar toolbar =
+                        (Toolbar) getActivity().findViewById(R.id.toolbar_detail);
+                if (toolbar != null) {
+                    toolbar.setTitle(String.format(
+                            getActivity().getResources().getString(R.string.title_top10_land),
+                            mArtistName,
+                            "US"
+                    ));
+                }
+            }
+        }
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
-        if (mFoundTracks != null){
+        if (mFoundTracks != null) {
             outState.putParcelableArrayList(TRACKS_TAG, mFoundTracks);
         }
         super.onSaveInstanceState(outState);
@@ -151,8 +181,7 @@ public class TrackListFragment extends Fragment {
                     }
                 }
                 mFoundTracks.add(holder.mFoundTrack);
-            }
-            else {
+            } else {
                 // Restore saved state
                 holder.mFoundTrack = mFoundTracks.get(position);
             }
@@ -175,18 +204,16 @@ public class TrackListFragment extends Fragment {
                                 getActivity().startService(intent);
                             }
                         }).start();
-                    }
-                    else if (position != SpotifyPlayerService.getPosition()
+                    } else if (position != SpotifyPlayerService.getPosition()
                             || !mFoundTracks.equals(SpotifyPlayerService.getTrackList())) {
                         SpotifyPlayerService.setTrackList(mFoundTracks);
                         SpotifyPlayerService.setPosition(position);
                         SpotifyPlayerService.getInstance().restart();
                     }
 
-                    if(getResources().getBoolean(R.bool.activity_artist_list_two_pane)){
+                    if (getResources().getBoolean(R.bool.activity_artist_list_two_pane)) {
                         ((ArtistListActivity) getActivity()).showDialog();
-                    }
-                    else {
+                    } else {
                         Context context = v.getContext();
                         context.startActivity(new Intent(context, TrackPlayerActivity.class));
                     }

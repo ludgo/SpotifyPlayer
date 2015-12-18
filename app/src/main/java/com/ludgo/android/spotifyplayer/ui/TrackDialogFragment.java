@@ -16,9 +16,9 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.ludgo.android.spotifyplayer.R;
-import com.ludgo.android.spotifyplayer.util.Utilities;
 import com.ludgo.android.spotifyplayer.model.FoundTrack;
 import com.ludgo.android.spotifyplayer.service.SpotifyPlayerService;
+import com.ludgo.android.spotifyplayer.util.Utilities;
 import com.squareup.picasso.Picasso;
 
 /**
