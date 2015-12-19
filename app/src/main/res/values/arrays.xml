@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="pref_country_entries">
+        <item>@string/pref_country_entries_us</item>
+        <item>@string/pref_country_entries_ar</item>
+        <item>@string/pref_country_entries_au</item>
+        <item>@string/pref_country_entries_at</item>
+        <item>@string/pref_country_entries_be</item>
+        <item>@string/pref_country_entries_bo</item>
+        <item>@string/pref_country_entries_br</item>
+        <item>@string/pref_country_entries_ca</item>
+        <item>@string/pref_country_entries_co</item>
+        <item>@string/pref_country_entries_cz</item>
+        <item>@string/pref_country_entries_dk</item>
+        <item>@string/pref_country_entries_de</item>
+        <item>@string/pref_country_entries_fi</item>
+        <item>@string/pref_country_entries_fr</item>
+        <item>@string/pref_country_entries_gr</item>
+        <item>@string/pref_country_entries_ie</item>
+        <item>@string/pref_country_entries_it</item>
+        <item>@string/pref_country_entries_my</item>
+        <item>@string/pref_country_entries_py</item>
+        <item>@string/pref_country_entries_pt</item>
+        <item>@string/pref_country_entries_sk</item>
+        <item>@string/pref_country_entries_es</item>
+        <item>@string/pref_country_entries_se</item>
+        <item>@string/pref_country_entries_ch</item>
+        <item>@string/pref_country_entries_tr</item>
+        <item>@string/pref_country_entries_gb</item>
+        <item>@string/pref_country_entries_uy</item>
+    </string-array>
+
+    <string-array name="pref_country_entryValues">
+        <item>@string/pref_country_entryValues_us</item>
+        <item>@string/pref_country_entryValues_ar</item>
+        <item>@string/pref_country_entryValues_au</item>
+        <item>@string/pref_country_entryValues_at</item>
+        <item>@string/pref_country_entryValues_be</item>
+        <item>@string/pref_country_entryValues_bo</item>
+        <item>@string/pref_country_entryValues_br</item>
+        <item>@string/pref_country_entryValues_ca</item>
+        <item>@string/pref_country_entryValues_co</item>
+        <item>@string/pref_country_entryValues_cz</item>
+        <item>@string/pref_country_entryValues_dk</item>
+        <item>@string/pref_country_entryValues_de</item>
+        <item>@string/pref_country_entryValues_fi</item>
+        <item>@string/pref_country_entryValues_fr</item>
+        <item>@string/pref_country_entryValues_gr</item>
+        <item>@string/pref_country_entryValues_ie</item>
+        <item>@string/pref_country_entryValues_it</item>
+        <item>@string/pref_country_entryValues_my</item>
+        <item>@string/pref_country_entryValues_py</item>
+        <item>@string/pref_country_entryValues_pt</item>
+        <item>@string/pref_country_entryValues_sk</item>
+        <item>@string/pref_country_entryValues_es</item>
+        <item>@string/pref_country_entryValues_se</item>
+        <item>@string/pref_country_entryValues_ch</item>
+        <item>@string/pref_country_entryValues_tr</item>
+        <item>@string/pref_country_entryValues_gb</item>
+        <item>@string/pref_country_entryValues_uy</item>
+    </string-array>
+
+</resources>

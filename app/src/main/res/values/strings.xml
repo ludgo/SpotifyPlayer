@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Spotify Player</string>
+    <string name="activity_settings">Settings</string>
+
+    <!-- ArtistDetailActivity title in TrackListFragment -->
     <string name="title_trending">Trending %1$s</string>
     <string name="title_top10_port">Spotify Top 10</string>
     <string name="title_top10_land">%1$s Top 10 %2$s</string>
@@ -13,4 +16,66 @@
     <string name="model_artist_name_default">-Unknown- Artist</string>
     <string name="model_track_name_default">-Unknown- Track</string>
     <string name="model_album_name_default">-Unknown- Album</string>
+
+    <!-- Preferences -->
+    <string name="pref_country_title">Choose country</string>
+    <string name="pref_country_key" translatable="false">PREF_COUNTRY_KEY</string>
+    <string name="pref_country_entryValues_default" translatable="false">
+        @string/pref_country_entryValues_us</string>
+
+    <string name="pref_country_entries_us">USA (default)</string>
+    <string name="pref_country_entryValues_us" translatable="false">us</string>
+    <string name="pref_country_entries_ar">Argentina</string>
+    <string name="pref_country_entryValues_ar" translatable="false">ar</string>
+    <string name="pref_country_entries_au">Australia</string>
+    <string name="pref_country_entryValues_au" translatable="false">au</string>
+    <string name="pref_country_entries_at">Austria</string>
+    <string name="pref_country_entryValues_at" translatable="false">at</string>
+    <string name="pref_country_entries_be">Belgium</string>
+    <string name="pref_country_entryValues_be" translatable="false">be</string>
+    <string name="pref_country_entries_bo">Bolivia</string>
+    <string name="pref_country_entryValues_bo" translatable="false">bo</string>
+    <string name="pref_country_entries_br">Brazil</string>
+    <string name="pref_country_entryValues_br" translatable="false">br</string>
+    <string name="pref_country_entries_ca">Canada</string>
+    <string name="pref_country_entryValues_ca" translatable="false">ca</string>
+    <string name="pref_country_entries_co">Colombia</string>
+    <string name="pref_country_entryValues_co" translatable="false">co</string>
+    <string name="pref_country_entries_cz">Czech Republic</string>
+    <string name="pref_country_entryValues_cz" translatable="false">cz</string>
+    <string name="pref_country_entries_dk">Denmark</string>
+    <string name="pref_country_entryValues_dk" translatable="false">dk</string>
+    <string name="pref_country_entries_de">Germany</string>
+    <string name="pref_country_entryValues_de" translatable="false">de</string>
+    <string name="pref_country_entries_fi">Finland</string>
+    <string name="pref_country_entryValues_fi" translatable="false">fi</string>
+    <string name="pref_country_entries_fr">France</string>
+    <string name="pref_country_entryValues_fr" translatable="false">fr</string>
+    <string name="pref_country_entries_gr">Greece</string>
+    <string name="pref_country_entryValues_gr" translatable="false">gr</string>
+    <string name="pref_country_entries_ie">Ireland</string>
+    <string name="pref_country_entryValues_ie" translatable="false">ie</string>
+    <string name="pref_country_entries_it">Italy</string>
+    <string name="pref_country_entryValues_it" translatable="false">it</string>
+    <string name="pref_country_entries_my">Malaysia</string>
+    <string name="pref_country_entryValues_my" translatable="false">my</string>
+    <string name="pref_country_entries_py">Paraguay</string>
+    <string name="pref_country_entryValues_py" translatable="false">py</string>
+    <string name="pref_country_entries_pt">Portugal</string>
+    <string name="pref_country_entryValues_pt" translatable="false">pt</string>
+    <string name="pref_country_entries_sk">Slovakia</string>
+    <string name="pref_country_entryValues_sk" translatable="false">sk</string>
+    <string name="pref_country_entries_es">Spain</string>
+    <string name="pref_country_entryValues_es" translatable="false">es</string>
+    <string name="pref_country_entries_se">Sweden</string>
+    <string name="pref_country_entryValues_se" translatable="false">se</string>
+    <string name="pref_country_entries_ch">Switzerland</string>
+    <string name="pref_country_entryValues_ch" translatable="false">ch</string>
+    <string name="pref_country_entries_tr">Turkey</string>
+    <string name="pref_country_entryValues_tr" translatable="false">tr</string>
+    <string name="pref_country_entries_gb">United Kingdom</string>
+    <string name="pref_country_entryValues_gb" translatable="false">gb</string>
+    <string name="pref_country_entries_uy">Uruguay</string>
+    <string name="pref_country_entryValues_uy" translatable="false">uy</string>
+
 </resources>

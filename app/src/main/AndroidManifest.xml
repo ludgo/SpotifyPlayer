@@ -38,7 +38,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ArtistDetailActivity" />
         </activity>
-        <service android:name=".service.SpotifyPlayerService"
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:label="@string/activity_settings"
+            android:theme="@style/SettingsTheme" />
+
+        <service
+            android:name=".service.SpotifyPlayerService"
             android:exported="false">
             <intent-filter>
                 <action android:name="PLAY_SPOTIFY" />
