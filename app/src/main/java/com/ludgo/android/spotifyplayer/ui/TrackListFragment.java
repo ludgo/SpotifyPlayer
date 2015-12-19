@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.ludgo.android.spotifyplayer.R;
 import com.ludgo.android.spotifyplayer.model.FoundTrack;
 import com.ludgo.android.spotifyplayer.service.SpotifyPlayerService;
+import com.ludgo.android.spotifyplayer.util.Utilities;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -41,13 +42,15 @@ public class TrackListFragment extends Fragment {
     public static final String ARTIST_ID_TAG = "artist_id_tag";
     public static final String ARTIST_NAME_TAG = "artist_name_tag";
 
-    // The fragment arguments representing chosen artist,
-    // required only for an initial fetch, not to be stored later
+    // The fragment arguments representing chosen artist
     private String mArtistId;
     private String mArtistName;
+    private String mCurrentCountryCode;
 
     private ArrayList<FoundTrack> mFoundTracks;
     private RecyclerView mTrackRecyclerView;
+
+    TextView mTrendingTextView;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -61,6 +64,7 @@ public class TrackListFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         mFoundTracks = new ArrayList<>();
+        mCurrentCountryCode = Utilities.getPreferredCountryCode(getActivity());
 
         if (getArguments().containsKey(ARTIST_ID_TAG)
                 && getArguments().containsKey(ARTIST_NAME_TAG)) {
@@ -86,29 +90,28 @@ public class TrackListFragment extends Fragment {
             // Populate recycler view without search, saved data will be used
             mTrackRecyclerView.setAdapter(
                     new TrackListFragment.TrackRecyclerViewAdapter(null));
-        } else if (mArtistId != null) {
+        } else {
             // Initiate async task right in the beginning
-            TrackAsyncTask task = new TrackAsyncTask();
-            task.execute(mArtistId);
+            searchTopTracks();
         }
 
         return rootView;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
 
         if (!getResources().getBoolean(R.bool.activity_artist_list_two_pane)) {
 
             if (getActivity().getResources().getConfiguration().orientation
                     == Configuration.ORIENTATION_PORTRAIT) {
                 // Set a multiple line title for portrait orientation
-                TextView trendingTextView = (TextView) getActivity().findViewById(R.id.title_trending);
-                if (trendingTextView != null) {
-                    trendingTextView.setText(String.format(
+                mTrendingTextView = (TextView) getActivity().findViewById(R.id.title_trending);
+                if (mTrendingTextView != null) {
+                    mTrendingTextView.setText(String.format(
                             getActivity().getResources().getString(R.string.title_trending),
-                            "US"
+                            mCurrentCountryCode.toUpperCase()
                     ));
                 }
                 CollapsingToolbarLayout ctl =
@@ -124,7 +127,7 @@ public class TrackListFragment extends Fragment {
                     toolbar.setTitle(String.format(
                             getActivity().getResources().getString(R.string.title_top10_land),
                             mArtistName,
-                            "US"
+                            mCurrentCountryCode.toUpperCase()
                     ));
                 }
             }
@@ -137,6 +140,37 @@ public class TrackListFragment extends Fragment {
             outState.putParcelableArrayList(TRACKS_TAG, mFoundTracks);
         }
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (!mCurrentCountryCode.equals(Utilities.getPreferredCountryCode(getActivity()))) {
+            // Update UI
+            searchTopTracks();
+            if (!getResources().getBoolean(R.bool.activity_artist_list_two_pane)) {
+                // Update title
+                if (mTrendingTextView != null) {
+                    mTrendingTextView.setText(String.format(
+                            getActivity().getResources().getString(R.string.title_trending),
+                            mCurrentCountryCode.toUpperCase()
+                    ));
+                }
+            }
+        }
+    }
+
+    /**
+     * Perform api search on demand
+     */
+    private void searchTopTracks() {
+        if (mArtistId != null) {
+            mCurrentCountryCode = Utilities.getPreferredCountryCode(getActivity());
+
+            TrackAsyncTask task = new TrackAsyncTask();
+            task.execute(mArtistId);
+        }
     }
 
     /**
@@ -257,7 +291,10 @@ public class TrackListFragment extends Fragment {
             // Let the integrated Spotify web api wrapper to request demanded data
             SpotifyApi api = new SpotifyApi();
             SpotifyService spotify = api.getService();
-            Tracks artistTracks = spotify.getArtistTopTrack(artistId, "us");
+            Tracks artistTracks = spotify.getArtistTopTrack(
+                    artistId,
+                    mCurrentCountryCode
+            );
             return artistTracks.tracks;
         }
 

@@ -66,7 +66,7 @@ public class ArtistListFragment extends Fragment {
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH){
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     String userInput = v.getText().toString();
                     if (!userInput.equals("")) {
                         searchArtist(userInput);
@@ -94,6 +94,15 @@ public class ArtistListFragment extends Fragment {
             outState.putParcelableArrayList(ARTISTS_TAG, mFoundArtists);
         }
         super.onSaveInstanceState(outState);
+    }
+
+    /**
+     * Perform api search on demand
+     */
+    private void searchArtist(String phrase){
+        mFoundArtists = new ArrayList<>();
+        ArtistAsyncTask task = new ArtistAsyncTask();
+        task.execute(phrase);
     }
 
     /**
@@ -208,14 +217,5 @@ public class ArtistListFragment extends Fragment {
             // Populate recycler view with found artists
             mArtistRecyclerView.setAdapter(new ArtistListFragment.ArtistRecyclerViewAdapter(list));
         }
-    }
-
-    /**
-     * Perform api search on demand
-     */
-    private void searchArtist(String phrase){
-        mFoundArtists = new ArrayList<>();
-        ArtistAsyncTask task = new ArtistAsyncTask();
-        task.execute(phrase);
     }
 }

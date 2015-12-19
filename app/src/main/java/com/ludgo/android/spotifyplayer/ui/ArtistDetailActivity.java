@@ -1,9 +1,11 @@
 package com.ludgo.android.spotifyplayer.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.MenuItem;
 
 import com.ludgo.android.spotifyplayer.R;
@@ -50,14 +52,25 @@ public class ArtistDetailActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button.
-            // Ensure that 'toolbar back' behaves just like 'bottom back'
-            onBackPressed();
-            return true;
+        switch (id) {
+            case android.R.id.home:
+                // This ID represents the Home or Up button.
+                // Ensure that 'toolbar back' behaves just like 'bottom back'
+                onBackPressed();
+                return true;
+            case R.id.action_settings:
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 }

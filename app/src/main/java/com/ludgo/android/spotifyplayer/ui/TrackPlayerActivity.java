@@ -35,12 +35,14 @@ public class TrackPlayerActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button.
-            // Ensure that 'toolbar back' behaves just like 'bottom back'
-            onBackPressed();
-            return true;
+        switch (id) {
+            case android.R.id.home:
+                // This ID represents the Home or Up button.
+                // Ensure that 'toolbar back' behaves just like 'bottom back'
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 }

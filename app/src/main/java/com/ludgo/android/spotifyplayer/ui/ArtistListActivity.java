@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.ludgo.android.spotifyplayer.R;
 import com.ludgo.android.spotifyplayer.service.SpotifyPlayerService;
@@ -58,6 +60,24 @@ public class ArtistListActivity extends AppCompatActivity {
             // User has clicked on notification in status bar
             getIntent().removeExtra(SpotifyPlayerService.FOREGROUND_NOTIFICATION_TAG);
             showDialog();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_settings:
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
